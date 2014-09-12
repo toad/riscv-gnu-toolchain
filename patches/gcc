@@ -160,3 +160,49 @@
  rs6000-ibm-aix4.[3456789]* | powerpc-ibm-aix4.[3456789]*)
  	md_unwind_header=rs6000/aix-unwind.h
  	tmake_file="t-fdpbit rs6000/t-ppc64-fp rs6000/t-slibgcc-aix rs6000/t-ibm-ldouble"
+From 38793e6deef15b60e897c9c29a0fa78856933793 Mon Sep 17 00:00:00 2001
+From: Palmer Dabbelt <palmer.dabbelt@eecs.berkeley.edu>
+Date: Fri, 12 Sep 2014 10:07:39 -0700
+Subject: [PATCH] Support the new riscv{32,64}-{linux,elf} RISC-V tuples
+
+This causes riscv64 to use the riscv directory, which means that the
+other RISC-V variants will probably end up using that as well.  I
+think this is probably the right thing to do: it's what Intel does,
+but not what ARM or Tilera do, but I think that's probably OK because
+riscv* should be fairly similar (as opposed to aarch64, which IIRC is
+pretty different).
+---
+ gcc/config.gcc     | 3 +++
+ libgcc/config.host | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index cd12365..830533e 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -447,6 +447,9 @@ powerpc*-*-*)
+ 	esac
+ 	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
+ 	;;
++riscv*)
++	cpu_type=riscv
++	;;
+ rs6000*-*-*)
+ 	need_64bit_hwint=yes
+ 	extra_options="${extra_options} g.opt fused-madd.opt rs6000/rs6000-tables.opt"
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 76cd0db..2e14897 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -167,6 +167,9 @@ powerpc*-*-*)
+ 	;;
+ rs6000*-*-*)
+ 	;;
++riscv*)
++	cpu_type=riscv
++	;;
+ score*-*-*)
+ 	cpu_type=score
+ 	;;
+-- 
+2.0.4
