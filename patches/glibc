@@ -18,3 +18,110 @@
  
  # Configuration		Library=version		Earliest symbol set (optional)
  # -------------		---------------		------------------------------
+From a46da37e5cc7ba5e574923875431ee8b441c9cf3 Mon Sep 17 00:00:00 2001
+From: Palmer Dabbelt <palmer.dabbelt@eecs.berkeley.edu>
+Date: Wed, 22 Oct 2014 10:44:55 -0700
+Subject: [PATCH 1/3] Don't depend on _RISCV_PTRSZ for __WORDSIZE
+
+This is defined by the RISC-V GCC toolchain, but that isn't availiable
+early in a cross compile when we're trying to build the glibc headers
+(which happens before there's a GCC built).
+
+This defines a different header for each of the RISC-V targets,
+containing a hard-coded __WORDSIZE definition.
+---
+ sysdeps/riscv/bits/wordsize.h      | 22 ----------------------
+ sysdeps/riscv/rv32/bits/wordsize.h | 22 ++++++++++++++++++++++
+ sysdeps/riscv/rv64/bits/wordsize.h | 22 ++++++++++++++++++++++
+ 3 files changed, 44 insertions(+), 22 deletions(-)
+ delete mode 100644 sysdeps/riscv/bits/wordsize.h
+ create mode 100644 sysdeps/riscv/rv32/bits/wordsize.h
+ create mode 100644 sysdeps/riscv/rv64/bits/wordsize.h
+
+diff --git a/sysdeps/riscv/bits/wordsize.h b/sysdeps/riscv/bits/wordsize.h
+deleted file mode 100644
+index f956c87..0000000
+--- a/sysdeps/riscv/bits/wordsize.h
++++ /dev/null
+@@ -1,22 +0,0 @@
+-/* Copyright (C) 2002, 2003 Free Software Foundation, Inc.
+-   This file is part of the GNU C Library.
+-
+-   The GNU C Library is free software; you can redistribute it and/or
+-   modify it under the terms of the GNU Lesser General Public
+-   License as published by the Free Software Foundation; either
+-   version 2.1 of the License, or (at your option) any later version.
+-
+-   The GNU C Library is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+-   Lesser General Public License for more details.
+-
+-   You should have received a copy of the GNU Lesser General Public
+-   License along with the GNU C Library; if not, write to the Free
+-   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+-   02111-1307 USA.  */
+-
+-#define __WORDSIZE	_RISCV_SZPTR
+-#if _RISCV_SIM == _ABI64
+-# define __WORDSIZE_COMPAT32	1
+-#endif
+diff --git a/sysdeps/riscv/rv32/bits/wordsize.h b/sysdeps/riscv/rv32/bits/wordsize.h
+new file mode 100644
+index 0000000..8357c20
+--- /dev/null
++++ b/sysdeps/riscv/rv32/bits/wordsize.h
+@@ -0,0 +1,22 @@
++/* Copyright (C) 2002, 2003 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, write to the Free
++   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
++   02111-1307 USA.  */
++
++#define __WORDSIZE	32
++#if _RISCV_SIM == _ABI64
++# define __WORDSIZE_COMPAT32	1
++#endif
+diff --git a/sysdeps/riscv/rv64/bits/wordsize.h b/sysdeps/riscv/rv64/bits/wordsize.h
+new file mode 100644
+index 0000000..4a833ea
+--- /dev/null
++++ b/sysdeps/riscv/rv64/bits/wordsize.h
+@@ -0,0 +1,22 @@
++/* Copyright (C) 2002, 2003 Free Software Foundation, Inc.
++   This file is part of the GNU C Library.
++
++   The GNU C Library is free software; you can redistribute it and/or
++   modify it under the terms of the GNU Lesser General Public
++   License as published by the Free Software Foundation; either
++   version 2.1 of the License, or (at your option) any later version.
++
++   The GNU C Library is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++   Lesser General Public License for more details.
++
++   You should have received a copy of the GNU Lesser General Public
++   License along with the GNU C Library; if not, write to the Free
++   Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
++   02111-1307 USA.  */
++
++#define __WORDSIZE	64
++#if _RISCV_SIM == _ABI64
++# define __WORDSIZE_COMPAT32	1
++#endif
+-- 
+2.0.4
+
