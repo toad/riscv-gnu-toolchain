@@ -125,3 +125,32 @@ index 0000000..4a833ea
 -- 
 2.0.4
 
+From c197f9ef36518eab98cc92e622e8e1fdb2bd6a80 Mon Sep 17 00:00:00 2001
+From: Palmer Dabbelt <palmer.dabbelt@eecs.berkeley.edu>
+Date: Wed, 22 Oct 2014 13:41:17 -0700
+Subject: [PATCH 2/3] Set RISC-V basic_machine correctly
+
+This is necessary to make the latest riscv{32,64}-* tuples work.
+---
+ sysdeps/riscv/preconfigure | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/sysdeps/riscv/preconfigure b/sysdeps/riscv/preconfigure
+index 11c8c2c..2a5a109 100644
+--- a/sysdeps/riscv/preconfigure
++++ b/sysdeps/riscv/preconfigure
+@@ -9,8 +9,9 @@ case $config_os in
+ *) riscv_config_abi=$riscv_cc_abi ;;
+ esac
+ case $riscv_config_abi in
+-default) machine=riscv/rv64 ;;
+-32) machine=riscv/rv32 ;;
++default) base_machine=riscv machine=riscv/rv64 ;;
++32) base_machine=riscv machine=riscv/rv32 ;;
++64) base_machine=riscv machine=riscv/rv64 ;;
+ esac
+ machine=$machine/$config_machine
+ if test $riscv_config_abi != $riscv_cc_abi; then
+-- 
+2.0.4
+
