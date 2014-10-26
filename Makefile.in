@@ -71,7 +71,7 @@ build-binutils-linux: src/binutils
 	cd $@ && \
 	CFLAGS+=-Wno-error=deprecated-declarations \
 	$(shell pwd)/$</configure \
-		--target=riscv-linux \
+		--target=riscv64-unknown-linux-gnu \
 		--prefix=$(INSTALL_DIR) \
 		--enable-tls \
 		--disable-multilib
@@ -82,8 +82,8 @@ build-glibc-linux: src/glibc build-gcc-linux-stage1
 	rm -rf $@
 	mkdir $@
 	cd $@ && CC= $(shell pwd)/$</configure \
-		--host=riscv-linux \
-		--prefix=$(INSTALL_DIR)/riscv-linux \
+		--host=riscv64-unknown-linux-gnu \
+		--prefix=$(INSTALL_DIR)/riscv64-unknown-linux-gnu \
 		libc_cv_forced_unwind=yes \
 		libc_cv_c_cleanup=yes \
 		--enable-shared \
@@ -97,7 +97,7 @@ build-gcc-linux-stage1: src/gcc build-binutils-linux
 	rm -rf $@
 	mkdir $@
 	cd $@ && $(shell pwd)/$</configure \
-		--target=riscv-linux \
+		--target=riscv64-unknown-linux-gnu \
 		--prefix=$(INSTALL_DIR) \
 		--enable-shared \
 		--disable-threads \
@@ -118,7 +118,7 @@ build-gcc-linux-stage2: src/gcc build-glibc-linux
 	rm -rf $@
 	mkdir $@
 	cd $@ && $(shell pwd)/$</configure \
-		--target=riscv-linux \
+		--target=riscv64-unknown-linux-gnu \
 		--prefix=$(INSTALL_DIR) \
 		--enable-shared \
 		--enable-tls \
