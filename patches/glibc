@@ -154,3 +154,51 @@ index 11c8c2c..2a5a109 100644
 -- 
 2.0.4
 
+From aca75de3882d6ed7c85377a6fcb4b88e17aa6921 Mon Sep 17 00:00:00 2001
+From: Palmer Dabbelt <palmer.dabbelt@eecs.berkeley.edu>
+Date: Sat, 25 Oct 2014 23:59:48 -0700
+Subject: [PATCH 3/3] Allow for builds without _RISCV_SIM defined
+
+I don't actually know where this definition is coming from, this patch
+just makes sure to check and see if _RISCV_SIM is defined before
+attempting to use its value.
+---
+ sysdeps/riscv/rv32/bits/wordsize.h | 7 +++++--
+ sysdeps/riscv/rv64/bits/wordsize.h | 7 +++++--
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/sysdeps/riscv/rv32/bits/wordsize.h b/sysdeps/riscv/rv32/bits/wordsize.h
+index 8357c20..24a8e7d 100644
+--- a/sysdeps/riscv/rv32/bits/wordsize.h
++++ b/sysdeps/riscv/rv32/bits/wordsize.h
+@@ -17,6 +17,9 @@
+    02111-1307 USA.  */
+ 
+ #define __WORDSIZE	32
+-#if _RISCV_SIM == _ABI64
+-# define __WORDSIZE_COMPAT32	1
++
++#ifdef _RISCV_SIM
++# if _RISCV_SIM == _ABI64
++#  define __WORDSIZE_COMPAT32	1
++# endif
+ #endif
+diff --git a/sysdeps/riscv/rv64/bits/wordsize.h b/sysdeps/riscv/rv64/bits/wordsize.h
+index 4a833ea..df16738 100644
+--- a/sysdeps/riscv/rv64/bits/wordsize.h
++++ b/sysdeps/riscv/rv64/bits/wordsize.h
+@@ -17,6 +17,9 @@
+    02111-1307 USA.  */
+ 
+ #define __WORDSIZE	64
+-#if _RISCV_SIM == _ABI64
+-# define __WORDSIZE_COMPAT32	1
++
++#ifdef _RISCV_SIM
++# if _RISCV_SIM == _ABI64
++#  define __WORDSIZE_COMPAT32	1
++# endif
+ #endif
+-- 
+2.0.4
+
