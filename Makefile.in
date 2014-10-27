@@ -139,7 +139,7 @@ build-binutils-newlib: src/binutils
 	cd $@ && \
 	CFLAGS+=-Wno-error=deprecated-declarations \
 	$(shell pwd)/$</configure \
-		--target=riscv-elf \
+		--target=riscv64-unknown-elf \
 		--prefix=$(INSTALL_DIR) \
 		--enable-tls
 	$(MAKE) -C $@ -j $(MAKE_JOBS)
@@ -155,7 +155,7 @@ build-gcc-newlib: src/newlib-gcc build-binutils-newlib
 	rm -rf $@
 	mkdir $@
 	cd $@ && $(shell pwd)/$</configure \
-		--target=riscv-elf \
+		--target=riscv64-unknown-elf \
 		--prefix=$(INSTALL_DIR) \
 		--disable-shared \
 		--disable-threads \
@@ -169,7 +169,8 @@ build-gcc-newlib: src/newlib-gcc build-binutils-newlib
 		--disable-nls
 	$(MAKE) -C $@ -j $(MAKE_JOBS) inhibit-libc=true
 	$(MAKE) -C $@ -j $(MAKE_JOBS) install
-	for i in $(INSTALL_DIR)/bin/riscv-elf-*; do j=`echo $$i | sed 's/riscv-elf-/riscv-/'`; if [ ! -f $$j ]; then ln -s `basename $$i` $$j; fi; done
+	for i in $(INSTALL_DIR)/bin/riscv64-unknown-elf-*; do j=`echo $$i | sed 's/riscv64-unknown-elf-/riscv-/'`; if [ ! -f $$j ]; then ln -s `basename $$i` $$j; fi; done
+	for i in $(INSTALL_DIR)/bin/riscv64-unknown-elf-*; do j=`echo $$i | sed 's/riscv64-unknown-elf-/riscv-elf-/'`; if [ ! -f $$j ]; then ln -s `basename $$i` $$j; fi; done
 
 clean:
 	rm -rf build-* $(addprefix src/,$(PACKAGES))
