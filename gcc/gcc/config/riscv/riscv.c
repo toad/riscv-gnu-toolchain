@@ -2471,12 +2471,6 @@ riscv_function_value (const_tree valtype, const_tree func, enum machine_mode mod
 	return gen_rtx_REG (mode, GP_RETURN);
     }
 
-  /* Handle long doubles for n32 & n64.  */
-  if (mode == TFmode)
-    return mips_return_fpr_pair (mode,
-    			     DImode, 0,
-    			     DImode, GET_MODE_SIZE (mode) / 2);
-
   if (mips_return_mode_in_fpr_p (mode))
     {
       if (GET_MODE_CLASS (mode) == MODE_COMPLEX_FLOAT)
