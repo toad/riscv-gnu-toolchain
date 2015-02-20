@@ -246,6 +246,7 @@ struct riscv_tune_info
   unsigned short int_div[2];
   unsigned short issue_rate;
   unsigned short branch_cost;
+  unsigned short fp_to_int_cost;
   unsigned short memory_cost;
 };
 
@@ -307,6 +308,7 @@ static const struct riscv_tune_info rocket_tune_info = {
   {COSTS_N_INSNS (6), COSTS_N_INSNS (6)},	/* int_div */
   1,						/* issue_rate */
   3,						/* branch_cost */
+  COSTS_N_INSNS (2),				/* fp_to_int_cost */
   5						/* memory_cost */
 };
 
@@ -319,6 +321,7 @@ static const struct riscv_tune_info optimize_size_tune_info = {
   {COSTS_N_INSNS (1), COSTS_N_INSNS (1)},	/* int_div */
   1,						/* issue_rate */
   1,						/* branch_cost */
+  COSTS_N_INSNS (1),				/* fp_to_int_cost */
   1						/* memory_cost */
 };
 
@@ -384,8 +387,10 @@ riscv_build_integer_1 (struct mips_integer_op *codes, HOST_WIDE_INT value,
   /* Eliminate trailing zeros and end with SLLI */
   if (cost > 2 && (value & 1) == 0)
     {
-      int shift = __builtin_ctzl(value);
-      alt_cost = 1 + riscv_build_integer_1 (alt_codes, value >> shift, mode);
+      int shift = 0;
+      while ((value & 1) == 0)
+	shift++, value >>= 1;
+      alt_cost = 1 + riscv_build_integer_1 (alt_codes, value, mode);
       alt_codes[alt_cost-1].code = ASHIFT;
       alt_codes[alt_cost-1].value = shift;
       if (alt_cost < cost)
@@ -406,11 +411,12 @@ riscv_build_integer (struct mips_integer_op *codes, HOST_WIDE_INT value,
   if (value > 0 && cost > 2)
     {
       struct mips_integer_op alt_codes[RISCV_MAX_INTEGER_OPS];
-      int alt_cost, shift;
+      int alt_cost, shift = 0;
       HOST_WIDE_INT shifted_val;
 
       /* Try filling trailing bits with 1s */
-      shift = __builtin_clzl(value);
+      while ((value << shift) >= 0)
+	shift++;
       shifted_val = (value << shift) | ((((HOST_WIDE_INT) 1) << shift) - 1);
       alt_cost = 1 + riscv_build_integer_1 (alt_codes, shifted_val, mode);
       alt_codes[alt_cost-1].code = LSHIFTRT;
@@ -3300,7 +3306,7 @@ riscv_expand_prologue (void)
   frame = &cfun->machine->frame;
   size = frame->total_size;
 
-  if (flag_stack_usage)
+  if (flag_stack_usage_info)
     current_function_static_stack_size = size;
 
   /* Save the registers.  Allocate up to RISCV_MAX_FIRST_STACK_STEP
@@ -3549,9 +3555,11 @@ mips_register_move_cost (enum machine_mode mode ATTRIBUTE_UNUSED,
 
   if ((from == GENERAL_REGS && to == GENERAL_REGS)
       || (from == GENERAL_REGS && to == FP_REGS)
-      || (from == FP_REGS && to == GENERAL_REGS)
       || (from == FP_REGS && to == FP_REGS))
     return COSTS_N_INSNS (1);
+
+  if (from == FP_REGS && to == GENERAL_REGS)
+    return tune_info->fp_to_int_cost;
 
   return 0;
 }
