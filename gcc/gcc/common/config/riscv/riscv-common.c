@@ -72,6 +72,16 @@ riscv_parse_arch_string (const char *isa, int *flags)
       return;
     }
 
+  *flags &= ~MASK_RVC;
+  if (*p == 'C')
+    *flags |= MASK_RVC, p++;
+
+  /* FIXME: For now we just stop parsing when faced with a
+     non-standard RISC-V ISA extension, partially becauses of a
+     problem with the naming scheme. */
+  if (*p == 'X')
+    return;
+
   if (*p)
     {
       error ("-march=%s: unsupported ISA substring %s", isa, p);
@@ -111,6 +121,7 @@ static const struct default_options riscv_option_optimization_table[] =
   {
     { OPT_LEVELS_1_PLUS, OPT_fsection_anchors, NULL, 1 },
     { OPT_LEVELS_1_PLUS, OPT_fomit_frame_pointer, NULL, 1 },
+    { OPT_LEVELS_SIZE, OPT_msave_restore, NULL, 1 },
     { OPT_LEVELS_NONE, 0, NULL, 0 }
   };
 
@@ -119,7 +130,8 @@ static const struct default_options riscv_option_optimization_table[] =
 
 #undef TARGET_DEFAULT_TARGET_FLAGS
 #define TARGET_DEFAULT_TARGET_FLAGS				\
-  (riscv_flags_from_arch_string (RISCV_ARCH_STRING_DEFAULT)	\
+  (TARGET_DEFAULT						\
+   | riscv_flags_from_arch_string (RISCV_ARCH_STRING_DEFAULT)	\
    | (TARGET_64BIT_DEFAULT ? 0 : MASK_32BIT))
 
 #undef TARGET_HANDLE_OPTION

@@ -74,9 +74,14 @@ START_RELOC_NUMBERS (elf_riscv_reloc_type)
   RELOC_NUMBER (R_RISCV_GNU_VTINHERIT, 41)
   RELOC_NUMBER (R_RISCV_GNU_VTENTRY, 42)
   RELOC_NUMBER (R_RISCV_ALIGN, 43)
+  RELOC_NUMBER (R_RISCV_RVC_BRANCH, 44)
+  RELOC_NUMBER (R_RISCV_RVC_JUMP, 45)
 END_RELOC_NUMBERS (R_RISCV_max)
 
 /* Processor specific flags for the ELF header e_flags field.  */
+
+/* File may contain compressed instructions.  */
+#define EF_RISCV_RVC 0x0001
 
 /* Custom flag definitions. */
 
