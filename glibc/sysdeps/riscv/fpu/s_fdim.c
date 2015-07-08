@@ -9,6 +9,7 @@ double __fdim (double x, double y)
   if (x <= y)
     return 0.0;
 
+<<<<<<< HEAD
 #ifdef __riscv_soft_float
   if (isinf(diff))
     errno = ERANGE;
@@ -16,6 +17,10 @@ double __fdim (double x, double y)
   if (__builtin_expect(_FCLASS(diff) & _FCLASS_INF, 0))
     errno = ERANGE;
 #endif
+=======
+  if (__builtin_expect(_FCLASS(diff) & _FCLASS_INF, 0))
+    errno = ERANGE;
+>>>>>>> hx/master
 
   return diff;
 }

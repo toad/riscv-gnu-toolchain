@@ -250,7 +250,6 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"lw",        "C",   "Ct,Ck(Cs)",  MATCH_C_LW, MASK_C_LW, match_opcode, INSN_ALIAS },
 {"lw",        "I",   "d,o(s)",  MATCH_LW, MASK_LW, match_opcode,   WR_xd|RD_xs1 },
 {"lw",        "I",   "d,A",  0, (int) M_LW, match_never, INSN_MACRO },
-{"ltag",      "I",   "d,o(s)", MATCH_LTAG, MASK_LTAG, match_opcode, WR_xd|RD_xs1 },
 {"not",       "I",   "d,s",  MATCH_XORI | MASK_IMM, MASK_XORI | MASK_IMM, match_opcode,   INSN_ALIAS|WR_xd|RD_xs1 },
 {"ori",       "32C", "Ct,Cs,Ci",  MATCH_C_ORIN, MASK_C_ORIN, match_opcode, INSN_ALIAS },
 {"ori",       "I",   "d,s,j",  MATCH_ORI, MASK_ORI, match_opcode,   WR_xd|RD_xs1 },
@@ -283,7 +282,6 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"sw",        "C",   "Ct,Ck(Cs)",  MATCH_C_SW, MASK_C_SW, match_opcode, INSN_ALIAS },
 {"sw",        "I",   "t,q(s)",  MATCH_SW, MASK_SW, match_opcode,   RD_xs1|RD_xs2 },
 {"sw",        "I",   "t,A,s",  0, (int) M_SW, match_never,  INSN_MACRO },
-{"stag",      "I",   "t,q(s)",  MATCH_STAG, MASK_STAG, match_opcode,   RD_xs1|RD_xs2 },
 {"fence",     "I",   "",  MATCH_FENCE | MASK_PRED | MASK_SUCC, MASK_FENCE | MASK_RD | MASK_RS1 | MASK_IMM, match_opcode,   INSN_ALIAS },
 {"fence",     "I",   "P,Q",  MATCH_FENCE, MASK_FENCE | MASK_RD | MASK_RS1 | (MASK_IMM & ~MASK_PRED & ~MASK_SUCC), match_opcode,   0 },
 {"fence.i",   "I",   "",  MATCH_FENCE_I, MASK_FENCE | MASK_RD | MASK_RS1 | MASK_IMM, match_opcode,   0 },
@@ -334,6 +332,11 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"sraw",      "64I", "d,s,t",   MATCH_SRAW, MASK_SRAW, match_opcode,   WR_xd|RD_xs1|RD_xs2 },
 {"sraw",      "64I", "d,s,<",   MATCH_SRAIW, MASK_SRAIW, match_opcode,   INSN_ALIAS|WR_xd|RD_xs1 },
 {"subw",      "64I", "d,s,t",  MATCH_SUBW, MASK_SUBW, match_opcode,   WR_xd|RD_xs1|RD_xs2 },
+
+// lowRISC tag instructions
+{"ltag",        "I",   "d,o(s)",  MATCH_LTAG, MASK_LTAG, match_opcode,   WR_xd|RD_xs1 },
+{"stag",        "I",   "t,q(s)",  MATCH_STAG, MASK_STAG, match_opcode,   WR_xd|RD_xs1 },
+{"stal",        "I",   "t,q(s)",  MATCH_STAL, MASK_STAL, match_opcode,   WR_xd|RD_xs1 },
 
 /* Compressed instructions */
 {"c.ebreak",  "C",   "",  MATCH_C_EBREAK, MASK_C_EBREAK, match_opcode, 0 },

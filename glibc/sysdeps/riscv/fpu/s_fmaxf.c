@@ -2,6 +2,7 @@
 
 float __fmaxf (float x, float y)
 {
+<<<<<<< HEAD
 #ifdef __riscv_soft_float
   if (isnan(x))
     return y;
@@ -13,5 +14,10 @@ float __fmaxf (float x, float y)
   asm ("fmax.s %0, %1, %2" : "=f"(res) : "f"(x), "f"(y));
   return res;
 #endif
+=======
+  float res;
+  asm ("fmax.s %0, %1, %2" : "=f"(res) : "f"(x), "f"(y));
+  return res;
+>>>>>>> hx/master
 }
 weak_alias (__fmaxf, fmaxf)

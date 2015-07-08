@@ -2,6 +2,7 @@
 
 double __fmin (double x, double y)
 {
+<<<<<<< HEAD
 #ifdef __riscv_soft_float
   if (isnan(x))
       return y;
@@ -13,5 +14,10 @@ double __fmin (double x, double y)
   asm ("fmin.d %0, %1, %2" : "=f"(res) : "f"(x), "f"(y));
   return res;
 #endif
+=======
+  double res;
+  asm ("fmin.d %0, %1, %2" : "=f"(res) : "f"(x), "f"(y));
+  return res;
+>>>>>>> hx/master
 }
 weak_alias (__fmin, fmin)

@@ -589,7 +589,10 @@ glibc_configure_flags
 float_asflags
 float_cflags
 atomic_cflags
+<<<<<<< HEAD
 ARCH
+=======
+>>>>>>> hx/master
 XLEN
 default_target
 FETCHER
@@ -652,7 +655,10 @@ ac_user_opts='
 enable_option_checking
 enable_linux
 with_xlen
+<<<<<<< HEAD
 with_arch
+=======
+>>>>>>> hx/master
 enable_atomic
 enable_float
 enable_multilib
@@ -1287,7 +1293,10 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-xlen=XLEN        Set XLEN, the X-register bit width (default is 64)
+<<<<<<< HEAD
   --with-arch=IMAFD       Sets the base RISC-V ISA, defaults to IMAFD
+=======
+>>>>>>> hx/master
 
 Some influential environment variables:
   CC          C compiler command
@@ -3150,6 +3159,7 @@ else
 fi
 
 
+<<<<<<< HEAD
 
 # Check whether --with-arch was given.
 if test "${with_arch+set}" = set; then :
@@ -3162,6 +3172,8 @@ else
 fi
 
 
+=======
+>>>>>>> hx/master
 # Check whether --enable-atomic was given.
 if test "${enable_atomic+set}" = set; then :
   enableval=$enable_atomic;
