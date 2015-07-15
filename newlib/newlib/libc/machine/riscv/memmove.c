@@ -70,7 +70,7 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
       /* Have to copy backwards */
 #ifdef TAGGED_MEMORY
       if(copyTags) {
-        TAG_COPY_FORWARD(dst, src, length);
+        TAG_COPY_BACKWARD(dst, src, length);
         return dst_void;
       }
 #endif
@@ -85,7 +85,7 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
     {
 #ifdef TAGGED_MEMORY
       if(copyTags) {
-        TAG_COPY_BACKWARD(dst, src, length);
+        TAG_COPY_FORWARD(dst, src, length);
         return dst_void;
       }
 #endif
