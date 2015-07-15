@@ -138,6 +138,8 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
   char tag = load_tag(aligned_src); \
   *aligned_dst = val; \
   store_tag(aligned_dst, tag); \
+  aligned_dst++; \
+  aligned_src++; \
 } while(0);
 
               if(copyTags) {
