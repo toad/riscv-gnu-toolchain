@@ -71,7 +71,7 @@ void* memmove (dest, src, len)
      size_t len;
 {
   if(!(((unsigned long)dest) % OPSIZ) && 
-     !(((unsigned long)dest) % OPSIZ) && !((len % OPSIZ))) {
+     !(((unsigned long)src) % OPSIZ) && !((len % OPSIZ))) {
     return __memmove_with_tags((op_t*)dest, (op_t*)src, len);
   } else {
     return __memmove_no_tags(a1, a2, len);
