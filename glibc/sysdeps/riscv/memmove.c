@@ -4,6 +4,7 @@
 
 #define MEMMOVE __memmove_no_tags
 #include "string/memmove.c"
+#include "tag.h"
 
 /* Copy forwards. len in words */
 static inline void wordcopy_fwd_tagged(op_t* dest, op_t* src, size_t len) {
@@ -13,7 +14,7 @@ static inline void wordcopy_fwd_tagged(op_t* dest, op_t* src, size_t len) {
     op_t a = *src;
     char tag = load_tag(src);
     *dest = a;
-    store_tag(dest);
+    store_tag(dest, tag);
   }
 }
 
@@ -27,7 +28,7 @@ static inline void wordcopy_bwd_tagged(op_t* dest, op_t* src, size_t len) {
     op_t a = *src;
     char tag = load_tag(src);
     *dest = a;
-    store_tag(dest);
+    store_tag(dest, tag);
   }
 }
 
@@ -69,7 +70,7 @@ void* memmove (dest, src, len)
      const void *src;
      size_t len;
 {
-  if(!(dest % OPSIZ) && !(dest & OPSIZ) && !(len % OPSIZ)) {
+  if(!(((long)dest) % OPSIZ) && !(((long)dest) & OPSIZ) && !((len % OPSIZ))) {
     return __memmove_with_tags((op_t*)dest, (op_t*)src, len);
   } else {
     return __memmove_no_tags(a1, a2, len);
