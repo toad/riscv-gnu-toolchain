@@ -1,6 +1,6 @@
 #include <string.h>
 #include <stdint.h>
-#include "sys/tag.h"
+#include "sys/platform/tag.h"
 
 #define TAGGED_MEMORY
 

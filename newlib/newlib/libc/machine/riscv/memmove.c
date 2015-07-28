@@ -6,7 +6,7 @@
 #define TAGGED_MEMORY
 
 #ifdef TAGGED_MEMORY
-#include "sys/tag.h"
+#include "sys/platform/tag.h"
 #endif
 
 /* Nonzero if either X or Y is not aligned on a "long" boundary.  */
