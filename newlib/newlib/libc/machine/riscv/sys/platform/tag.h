@@ -5,21 +5,8 @@
 
 #define TAG_WIDTH 4
 
-static inline int __riscv_load_tag(const void *addr) {
-  int rv = 32;
-  asm volatile ("ltag %0, 0(%1)"
-                :"=r"(rv)
-                :"r"(addr)
-                );
-  return rv;
-}
+int __riscv_load_tag(const void *addr);
 
-
-static inline void __riscv_store_tag(void *addr, int tag) {
-  asm volatile ("stag %0, 0(%1)"
-                :
-                :"r"(tag), "r"(addr)
-                );
-}
+void __riscv_store_tag(void *addr, int tag);
 
 #endif
