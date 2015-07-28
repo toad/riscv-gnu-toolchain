@@ -1,5 +1,3 @@
-// See LICENSE for license details.
-
 int __riscv_load_tag(const void *addr) {
   int rv = 32;
   asm volatile ("ltag %0, 0(%1)"
