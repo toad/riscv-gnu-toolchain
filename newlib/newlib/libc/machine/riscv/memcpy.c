@@ -15,10 +15,10 @@ void* memcpy(void* aa, const void* bb, size_t n)
 #ifdef TAGGED_MEMORY
   #define BODY_TAGGED(a, b) { \
     long tt = *b; \
-    char tag = load_tag(b); \
+    char tag = __riscv_load_tag(b); \
     a++, b++; \
     *(a-1) = tt; \
-    store_tag(a-1, tag); \
+    __riscv_store_tag(a-1, tag); \
   }
 #endif
 
@@ -54,21 +54,21 @@ small:
       while (la < lend-8)
       {
         long b0 = *lb++;
-        char t0 = load_tag(lb-1);
+        char t0 = __riscv_load_tag(lb-1);
         long b1 = *lb++;
-        char t1 = load_tag(lb-1);
+        char t1 = __riscv_load_tag(lb-1);
         long b2 = *lb++;
-        char t2 = load_tag(lb-1);
+        char t2 = __riscv_load_tag(lb-1);
         long b3 = *lb++;
-        char t3 = load_tag(lb-1);
+        char t3 = __riscv_load_tag(lb-1);
         *la++ = b0;
-        store_tag(la-1, t0);
+        __riscv_store_tag(la-1, t0);
         *la++ = b1;
-        store_tag(la-1, t1);
+        __riscv_store_tag(la-1, t1);
         *la++ = b2;
-        store_tag(la-1, t2);
+        __riscv_store_tag(la-1, t2);
         *la++ = b3;
-        store_tag(la-1, t3);
+        __riscv_store_tag(la-1, t3);
       }
     }
   } else {

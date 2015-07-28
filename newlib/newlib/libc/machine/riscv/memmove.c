@@ -40,9 +40,9 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
   s--; d--; \
   for(;length--;s--,d--) { \
     long l = *s; \
-    char tag = load_tag(s); \
+    char tag = __riscv_load_tag(s); \
     *d = l; \
-    store_tag(d, tag); \
+    __riscv_store_tag(d, tag); \
   } \
 } while(0);
 
@@ -52,9 +52,9 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
   long *s = (long*) src; \
   for(;length--;s++,d++) { \
     long l = *s; \
-    char tag = load_tag(s); \
+    char tag = __riscv_load_tag(s); \
     *d = l; \
-    store_tag(d, tag); \
+    __riscv_store_tag(d, tag); \
   } \
 } while(0)
 
@@ -135,9 +135,9 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
 #ifdef TAGGED_MEMORY
 #define COPY(aligned_dst, aligned_src) do { \
   long val = *aligned_src; \
-  char tag = load_tag(aligned_src); \
+  char tag = __riscv_load_tag(aligned_src); \
   *aligned_dst = val; \
-  store_tag(aligned_dst, tag); \
+  __riscv_store_tag(aligned_dst, tag); \
   aligned_dst++; \
   aligned_src++; \
 } while(0);
