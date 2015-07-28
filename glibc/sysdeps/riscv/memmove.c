@@ -6,6 +6,12 @@
 #include "string/memmove.c"
 #include "tag.h"
 
+/* Nonzero if either X or Y is not aligned on a "long" boundary.  */
+#define UNALIGNED3(X, Y, Z) \
+  (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
+  ((long)Z & (sizeof (long) - 1)))
+
+
 /* Copy forwards. len in words */
 static inline void wordcopy_fwd_tagged(op_t* dest, op_t* src, size_t len) {
   /* FIXME consider unrolling, see string/wordcopy.c.
@@ -65,15 +71,15 @@ void* __memmove_with_tags(op_t* dest, op_t* src, size_t len) {
 
 /* Choose the right version at runtime */
 
-void* memmove (dest, src, len)
-     void *dest;
-     const void *src;
-     size_t len;
-{
-  if(!(((unsigned long)dest) % OPSIZ) && 
-     !(((unsigned long)src) % OPSIZ) && !((len % OPSIZ))) {
-    return __memmove_with_tags((op_t*)dest, (op_t*)src, len);
+void* __memmove (void *dest, const void *src, size_t len) {
+  if(UNALIGNED3(dest, src, len)) {
+    return __memmove_no_tags(dest, src, len);
   } else {
-    return __memmove_no_tags(a1, a2, len);
+    return __memmove_with_tags((op_t*)dest, (op_t*)src, len);
   }
+  return dest;
 }
+
+weak_alias (__memmove, memmove)
+libc_hidden_builtin_def (memmove)
+
