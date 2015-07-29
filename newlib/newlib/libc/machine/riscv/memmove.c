@@ -27,38 +27,12 @@
 /* Threshhold for punting to the byte copier.  */
 #define TOO_SMALL(LEN)  ((LEN) < BIGBLOCKSIZE)
 
-void* memmove(void *dst_void, const void* src_void, size_t length) {
 #ifdef TAGGED_MEMORY
-  int copyTags = !UNALIGNED3(src_void, dst_void, length);
-
-#define TAG_COPY_BACKWARD(dst, src, length) do { \
-  length /= sizeof(long); \
-  long *d = (long*) dst; \
-  long *s = (long*) src; \
-  d += length; \
-  s += length; \
-  s--; d--; \
-  for(;length--;s--,d--) { \
-    long l = *s; \
-    char tag = __riscv_load_tag(s); \
-    *d = l; \
-    __riscv_store_tag(d, tag); \
-  } \
-} while(0);
-
-#define TAG_COPY_FORWARD(dst, src, length) do { \
-  length /= sizeof(long); \
-  long *d = (long*) dst; \
-  long *s = (long*) src; \
-  for(;length--;s++,d++) { \
-    long l = *s; \
-    char tag = __riscv_load_tag(s); \
-    *d = l; \
-    __riscv_store_tag(d, tag); \
-  } \
-} while(0)
-
-#endif /* TAGGED_MEMORY */
+#define MEMMOVE_NAME __riscv_memmove_no_tags
+#else
+#define MEMMOVE_NAME memmove
+#endif
+void* MEMMOVE_NAME(void *dst_void, const void* src_void, size_t length) {
 
 #if defined(PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__)
 
@@ -68,12 +42,6 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
   if (src < dst && dst < src + length)
     {
       /* Have to copy backwards */
-#ifdef TAGGED_MEMORY
-      if(copyTags) {
-        TAG_COPY_BACKWARD(dst, src, length);
-        return dst_void;
-      }
-#endif
       src += length;
       dst += length;
       while (length--)
@@ -83,12 +51,6 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
     }
   else
     {
-#ifdef TAGGED_MEMORY
-      if(copyTags) {
-        TAG_COPY_FORWARD(dst, src, length);
-        return dst_void;
-      }
-#endif
       while (length--)
 	{
 	  *dst++ = *src++;
@@ -105,12 +67,6 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
 
   if (src < dst && dst < src + len)
     {
-#ifdef TAGGED_MEMORY
-      if(copyTags) {
-        TAG_COPY_BACKWARD(dst, src, length);
-        return dst_void;
-      }
-#endif
       /* Destructive overlap...have to copy backwards */
       src += len;
       dst += len;
@@ -132,45 +88,17 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
           /* Copy 4X long words at a time if possible.  */
           while (len >= BIGBLOCKSIZE)
             {
-#ifdef TAGGED_MEMORY
-#define COPY(aligned_dst, aligned_src) do { \
-  long val = *aligned_src; \
-  char tag = __riscv_load_tag(aligned_src); \
-  *aligned_dst = val; \
-  __riscv_store_tag(aligned_dst, tag); \
-  aligned_dst++; \
-  aligned_src++; \
-} while(0);
-
-              if(copyTags) {
-                COPY(aligned_dst, aligned_src);
-                COPY(aligned_dst, aligned_src);
-                COPY(aligned_dst, aligned_src);
-                COPY(aligned_dst, aligned_src);
-              } else {
-#endif
-                *aligned_dst++ = *aligned_src++;
-                *aligned_dst++ = *aligned_src++;
-                *aligned_dst++ = *aligned_src++;
-                *aligned_dst++ = *aligned_src++;
-#ifdef TAGGED_MEMORY
-              }
-#endif
+              *aligned_dst++ = *aligned_src++;
+              *aligned_dst++ = *aligned_src++;
+              *aligned_dst++ = *aligned_src++;
+              *aligned_dst++ = *aligned_src++;
               len -= BIGBLOCKSIZE;
             }
 
           /* Copy one long word at a time if possible.  */
           while (len >= LITTLEBLOCKSIZE)
             {
-#ifdef TAGGED_MEMORY
-              if(copyTags) {
-                COPY(aligned_dst, aligned_src)
-              } else {
-#endif
-                *aligned_dst++ = *aligned_src++;
-#ifdef TAGGED_MEMORY
-              }
-#endif
+              *aligned_dst++ = *aligned_src++;
               len -= LITTLEBLOCKSIZE;
             }
 
@@ -188,3 +116,96 @@ void* memmove(void *dst_void, const void* src_void, size_t length) {
   return dst_void;
 #endif /* not PREFER_SIZE_OVER_SPEED */
 }
+
+#ifdef TAGGED_MEMORY
+
+/* All arguments must be long-aligned, and the length is in long's. */
+unsigned long* __riscv_memmove_tagged_longs(unsigned long *dst, 
+  const unsigned long* src, size_t length) {
+
+#define TAG_COPY_BACKWARD(d, s, length) do { \
+  d += length; \
+  s += length; \
+  s--; d--; \
+  for(;length--;s--,d--) { \
+    unsigned long l = *s; \
+    char tag = __riscv_load_tag(s); \
+    *d = l; \
+    __riscv_store_tag(d, tag); \
+  } \
+} while(0);
+
+#define TAG_COPY_FORWARD(d, s, length) do { \
+  for(;length--;s++,d++) { \
+    unsigned long l = *s; \
+    char tag = __riscv_load_tag(s); \
+    *d = l; \
+    __riscv_store_tag(d, tag); \
+  } \
+} while(0)
+
+  unsigned long * const ret = dst;
+
+#if defined(PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__)
+
+  if (src < dst && dst < src + length)
+    {
+      TAG_COPY_BACKWARD(dst, src, length);
+      return ret;
+    }
+  else
+    {
+      TAG_COPY_FORWARD(dst, src, length);
+      return ret;
+    }
+#else
+  if (src < dst && dst < src + length)
+    {
+      TAG_COPY_BACKWARD(dst, src, length);
+      return dst;
+    }
+  else
+    {
+      /* Use optimizing algorithm for a non-destructive copy to closely 
+         match memcpy. */
+
+      /* Copy 4X long words at a time if possible.  */
+      while (length >= 4)
+        {
+#define COPY(aligned_dst, aligned_src) do { \
+  unsigned long val = *aligned_src; \
+  char tag = __riscv_load_tag(aligned_src); \
+  *aligned_dst = val; \
+  __riscv_store_tag(aligned_dst, tag); \
+  aligned_dst++; \
+  aligned_src++; \
+} while(0);
+
+          COPY(dst, src);
+          COPY(dst, src);
+          COPY(dst, src);
+          COPY(dst, src);
+          length -= 4;
+        }
+
+      /* Copy one long word at a time if possible.  */
+      while (length >= 1)
+        {
+          COPY(dst, src)
+          length--;
+        }
+    }
+
+  return ret;
+#endif /* not PREFER_SIZE_OVER_SPEED */
+}
+
+void* memmove(void *dst, const void* src, size_t length) {
+  if(UNALIGNED3(dst, src, length))
+    return __riscv_memmove_no_tags(dst, src, length);
+  else
+    return __riscv_memmove_tagged_longs((unsigned long*)dst, 
+      (const unsigned long*)src, length/sizeof(unsigned long));
+}
+
+#endif /* TAGGED_MEMORY */
