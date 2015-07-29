@@ -119,6 +119,11 @@ unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la,
   return aa;
 }
 
+/* Nonzero if either X or Y is not aligned on a "long" boundary.  */
+#define UNALIGNED3(X, Y, Z) \
+  (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
+  ((long)Z & (sizeof (long) - 1)))
+
 void* memcpy(void *dst, const void* src, size_t length) {
   if(UNALIGNED3(dst, src, length))
     return __riscv_memcpy_no_tags(dst, src, length);
