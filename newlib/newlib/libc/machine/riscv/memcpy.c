@@ -90,10 +90,10 @@ unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la,
 
   unsigned long* lend = la + length;
 
-  if(__builtin_expect(la < lend-3, 0)) {
+  if(__builtin_expect(la < lend-4, 0)) {
     /* Only copy four at a time because will need regs for tags too.
      * Compiler will use a whole reg for a char, right? */
-    while (la < lend-8)
+    while (la < lend-4)
     {
       long b0 = *lb++;
       char t0 = __riscv_load_tag(lb-1);
