@@ -88,7 +88,8 @@ unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la,
     __riscv_store_tag(a-1, tag); \
   }
 
-  unsigned long* lend = la + length;
+  unsigned long *ret = la;
+  unsigned long *lend = la + length;
 
   if(__builtin_expect(la < lend-4, 0)) {
     /* Only copy four at a time because will need regs for tags too.
@@ -114,9 +115,9 @@ unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la,
     }
   }
   while (la < lend)
-    BODY_TAGGED(la, lb, long);
+    BODY_TAGGED(la, lb);
 
-  return aa;
+  return ret;
 }
 
 /* Nonzero if either X, Y or Z is not aligned on a "long" boundary.  */
