@@ -13,7 +13,7 @@
 #define UNALIGNED2(X, Y) \
   (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)))
 
-/* Nonzero if either X or Y is not aligned on a "long" boundary.  */
+/* Nonzero if either X, Y or Z is not aligned on a "long" boundary.  */
 #define UNALIGNED3(X, Y, Z) \
   (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
   ((long)Z & (sizeof (long) - 1)))
