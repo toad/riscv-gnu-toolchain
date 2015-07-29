@@ -18,8 +18,28 @@
 /* No effect, but cleared on write */
 #define __RISCV_TAG_LAZY 4
 
-int __riscv_load_tag(const void *addr);
-
-void __riscv_store_tag(void *addr, int tag);
-
+#ifndef INLINE
+# if __GNUC__ && !__GNUC_STDC_INLINE__
+#  define INLINE extern inline
+# else
+#  define INLINE inline
+# endif
 #endif
+
+INLINE int __riscv_load_tag(const void *addr) {
+  int rv = 32;
+  asm volatile ("ltag %0, 0(%1)"
+                :"=r"(rv)
+                :"r"(addr)
+                );
+  return rv;
+}
+
+INLINE void __riscv_store_tag(void *addr, int tag) {
+  asm volatile ("stag %0, 0(%1)"
+                :
+                :"r"(tag), "r"(addr)
+                );
+}
+
+#endif /* !LOWRISC_TAG_H */
