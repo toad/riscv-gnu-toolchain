@@ -1,4 +1,4 @@
-// See LICENSE for license details.
+/* Platform-specific functions for tagged memory on LowRISC. */
 
 #ifndef LOWRISC_TAG_H
 #define LOWRISC_TAG_H
