@@ -83,13 +83,13 @@ void* __riscv_memmove_no_tags(void *dst, const void* src, size_t length);
  * overlap, and must be 64-bit aligned. Use this method for copying structures 
  * that may contain code pointers etc. */
 unsigned long *__riscv_memcpy_tagged_longs(unsigned long *dst, 
-  const unsigned long* src, size_t length)
+  const unsigned long* src, size_t length);
 
 /* Copy length long's, including tags, from src to dst. dst and src may 
  * overlap, but must be 64-bit aligned. Use this method for copying structures 
  * that may contain code pointers etc, where dst and src may overlap. */
 unsigned long *__riscv_memmove_tagged_longs(unsigned long *dst, 
-  const unsigned long* src, size_t length)
+  const unsigned long* src, size_t length);
 
 /* void* versions. Be careful! */
 
