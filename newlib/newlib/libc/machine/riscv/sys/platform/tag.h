@@ -11,6 +11,9 @@
 #ifndef LOWRISC_TAG_H
 #define LOWRISC_TAG_H
 
+#include <assert.h>
+#include <stddef.h>
+
 #define TAG_WIDTH 4
 
 /* Standard tag values */
@@ -87,5 +90,29 @@ unsigned long *__riscv_memcpy_tagged_longs(unsigned long *dst,
  * that may contain code pointers etc, where dst and src may overlap. */
 unsigned long *__riscv_memmove_tagged_longs(unsigned long *dst, 
   const unsigned long* src, size_t length)
+
+/* void* versions. Be careful! */
+
+/* Nonzero if either X, Y or Z is not aligned on a "long" boundary.  */
+#define UNALIGNED3(X, Y, Z) \
+  (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
+  ((long)Z & (sizeof (long) - 1)))
+
+/* Copy length bytes, including tags, from src to dst. dst and src must not
+ * overlap, and must be 64-bit aligned, and length must be a multiple of 8. Use 
+ * this method for copying structures that may contain code pointers etc. */
+INLINE void *__riscv_memcpy_tagged(void *dst, const void *src, size_t length) {
+  assert(!UNALIGNED3(dst, src, length);
+  __riscv_memcpy_tagged_longs(dst, src, length / sizeof(long));
+}
+
+/* Copy length bytes, including tags, from src to dst. dst and src may 
+ * overlap, but must be 64-bit aligned, and length must be a multiple of 8. 
+ * Use this method for copying structures that may contain code pointers etc, 
+ * where dst and src may overlap. */
+INLINE void *__riscv_memmove_tagged(void *dst, const void *src, size_t length) {
+  assert(!UNALIGNED3(dst, src, length);
+  __riscv_memmove_tagged_longs(dst, src, length / sizeof(long));
+}
 
 #endif /* !LOWRISC_TAG_H */
