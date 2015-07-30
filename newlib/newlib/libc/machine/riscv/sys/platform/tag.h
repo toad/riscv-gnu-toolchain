@@ -26,7 +26,7 @@
 # endif
 #endif
 
-INLINE int __riscv_load_tag(const void *addr) {
+INLINE unsigned int __riscv_load_tag(const void *addr) {
   int rv = 32;
   asm volatile ("ltag %0, 0(%1)"
                 :"=r"(rv)
@@ -35,7 +35,7 @@ INLINE int __riscv_load_tag(const void *addr) {
   return rv;
 }
 
-INLINE void __riscv_store_tag(void *addr, int tag) {
+INLINE void __riscv_store_tag(void *addr, unsigned int tag) {
   asm volatile ("stag %0, 0(%1)"
                 :
                 :"r"(tag), "r"(addr)
