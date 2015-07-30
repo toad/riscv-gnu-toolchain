@@ -1,4 +1,10 @@
-/* Platform-specific functions for tagged memory on LowRISC. */
+/* Platform-specific functions for tagged memory on LowRISC.
+ * The compiler should define __TAGGED_MEMORY__ and __lowrisc__ if these are 
+ * available. You may want to use tags for your own purposes, and might want to
+ * use the memcpy/memmove variants, although your compiler should choose the 
+ * right one in many cases, and the default behaviour should generally be 
+ * compatible with existing code while not providing the maximum possible 
+ * protection. */
 
 #ifndef LOWRISC_TAG_H
 #define LOWRISC_TAG_H
