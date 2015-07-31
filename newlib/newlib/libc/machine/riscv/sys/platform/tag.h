@@ -119,7 +119,7 @@ unsigned long *__riscv_memmove_tagged_longs(unsigned long *dst,
  * this method for copying structures that may contain code pointers etc. */
 INLINE void *__riscv_memcpy_tagged(void *dst, const void *src, size_t length) {
   assert(!UNALIGNED3(dst, src, length));
-  __riscv_memcpy_tagged_longs(dst, src, length / sizeof(long));
+  return __riscv_memcpy_tagged_longs((unsigned long*)dst, (unsigned long*)src, length / sizeof(long));
 }
 
 /* Copy length bytes, including tags, from src to dst. dst and src may 
@@ -128,7 +128,7 @@ INLINE void *__riscv_memcpy_tagged(void *dst, const void *src, size_t length) {
  * where dst and src may overlap. */
 INLINE void *__riscv_memmove_tagged(void *dst, const void *src, size_t length) {
   assert(!UNALIGNED3(dst, src, length));
-  __riscv_memmove_tagged_longs(dst, src, length / sizeof(long));
+  return __riscv_memmove_tagged_longs((unsigned long*)dst, (unsigned long*)src, length / sizeof(long));
 }
 
 #endif /* !LOWRISC_TAG_H */
