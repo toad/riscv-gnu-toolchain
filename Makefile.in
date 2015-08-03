@@ -71,7 +71,7 @@ $(addprefix src/original-,$(PACKAGES)):
 	mkdir -p src
 	rm -rf $@ $(subst original-,,$@)-*
 	curl $($(subst src/original-,,$@)_url) -o $@.tar.gz
-	hash=$$(sha256sum $@.tar.gz | cut -d " " -f 1) && test $$hash == $($(subst src/original-,,$@)_sha256)
+	hash=$$(sha256sum $@.tar.gz | cut -d " " -f 1) && test "$$hash" = "$($(subst src/original-,,$@)_sha256)"
 	cd src && tar zxf ../$@.tar.gz
 	rm $@.tar.gz
 	mv $(subst original-,,$@)-$($(subst src/original-,,$@)_version) $@
