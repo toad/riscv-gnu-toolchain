@@ -7,10 +7,10 @@
 #include <stddef.h>
 #include <string.h>
 
-void* __memmove_no_tags(void* dst, const void* src, size_t len);
+void* __riscv_memmove_no_tags(void* dst, const void* src, size_t len);
 
 /* Persuade memmove.c not to redefine memmove etc */
-#define MEMMOVE __memmove_no_tags
+#define MEMMOVE __riscv_memmove_no_tags
 #define a1 dest
 #define a2 src
 #define a1const
@@ -55,7 +55,7 @@ static inline void wordcopy_bwd_tagged(op_t* dest, op_t* src, size_t len) {
 
 /* Tag-copying version of memmove */
 
-void* __memmove_with_tags(op_t* dest, op_t* src, size_t len) {
+void* __riscv_memmove_with_tags(op_t* dest, op_t* src, size_t len) {
   unsigned long int dstp = (long int) dest;
   unsigned long int srcp = (long int) src;
   /* This test makes the forward copying code be used whenever possible.
@@ -88,9 +88,9 @@ void* __memmove_with_tags(op_t* dest, op_t* src, size_t len) {
 
 void* memmove (void *dest, const void *src, size_t len) {
   if(UNALIGNED3(dest, src, len)) {
-    return __memmove_no_tags(dest, src, len);
+    return __riscv_memmove_no_tags(dest, src, len);
   } else {
-    return __memmove_with_tags((op_t*)dest, (op_t*)src, len);
+    return __riscv_memmove_with_tags((op_t*)dest, (op_t*)src, len);
   }
   return dest;
 }
