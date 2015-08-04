@@ -132,4 +132,6 @@ void* memcpy(void *dst, const void* src, size_t length) {
       (const unsigned long*)src, length/sizeof(unsigned long));
 }
 
+libc_hidden_builtin_def (memcpy)
+
 #endif /* TAGGED_MEMORY */
