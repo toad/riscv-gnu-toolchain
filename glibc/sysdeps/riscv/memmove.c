@@ -86,13 +86,12 @@ void* __riscv_memmove_with_tags(op_t* dest, op_t* src, size_t len) {
 
 /* Choose the right version at runtime */
 
-void* memmove (void *dest, const void *src, size_t len) {
-  if(UNALIGNED3(dest, src, len)) {
-    return __riscv_memmove_no_tags(dest, src, len);
-  } else {
-    return __riscv_memmove_with_tags((op_t*)dest, (op_t*)src, len);
-  }
-  return dest;
+void* memmove(void *dst, const void* src, size_t length) {
+  if(UNALIGNED3(dst, src, length))
+    return __riscv_memmove_no_tags(dst, src, length);
+  else
+    return __riscv_memmove_with_tags((op_t*)dst, (op_t*)src, length);
+  return dst;
 }
 
 libc_hidden_builtin_def (memmove)
