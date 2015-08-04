@@ -26,9 +26,11 @@ void* __riscv_memmove_no_tags(void* dst, const void* src, size_t len);
   (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
   ((long)Z & (sizeof (long) - 1)))
 
+#define store_tag __riscv_store_tag
+#define load_tag __riscv_load_tag
 
 /* Copy forwards. len in words */
-static inline void wordcopy_fwd_tagged(op_t* dest, op_t* src, size_t len) {
+static inline void wordcopy_fwd_tagged(op_t* dest, const op_t* src, size_t len) {
   /* FIXME consider unrolling, see string/wordcopy.c.
    * However, the compiler really ought to be able to do that nowadays! */
   for(;len;dest++,src++,len--) {
@@ -40,7 +42,7 @@ static inline void wordcopy_fwd_tagged(op_t* dest, op_t* src, size_t len) {
 }
 
 /* Copy backwards. len in words */
-static inline void wordcopy_bwd_tagged(op_t* dest, op_t* src, size_t len) {
+static inline void wordcopy_bwd_tagged(op_t* dest, const op_t* src, size_t len) {
   /* FIXME consider unrolling, see string/wordcopy.c.
    * However, the compiler really ought to be able to do that nowadays! */
   dest += (len-1);
@@ -55,7 +57,7 @@ static inline void wordcopy_bwd_tagged(op_t* dest, op_t* src, size_t len) {
 
 /* Tag-copying version of memmove */
 
-void* __riscv_memmove_tagged_longs(op_t* dest, op_t* src, size_t len) {
+op_t* __riscv_memmove_tagged_longs(op_t* dest, const op_t* src, size_t len) {
   unsigned long int dstp = (long int) dest;
   unsigned long int srcp = (long int) src;
   /* This test makes the forward copying code be used whenever possible.
