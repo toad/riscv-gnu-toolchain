@@ -98,13 +98,15 @@ along with GCC; see the file COPYING3.  If not see
 	  builtin_define_std ("LANGUAGE_C");				\
 	  builtin_define ("_LANGUAGE_C");				\
 	}								\
+      if (riscv_cmodel == CM_MEDANY)					\
+	builtin_define ("_RISCV_CMODEL_MEDANY");			\
     }									\
   while (0)
 
 /* Default target_flags if no switches are specified  */
 
 #ifndef TARGET_DEFAULT
-#define TARGET_DEFAULT (TARGET_ATOMIC | 
+#define TARGET_DEFAULT 0
 #endif
 
 #ifndef RISCV_ARCH_STRING_DEFAULT
@@ -140,6 +142,7 @@ along with GCC; see the file COPYING3.  If not see
    --with-tune is ignored if -mtune is specified.
    --with-float is ignored if -mhard-float or -msoft-float are specified. */
 #define OPTION_DEFAULT_SPECS \
+  {"arch", "%{!march=*:-march=%(VALUE)}"},			   \
   {"arch_32", "%{" OPT_ARCH32 ":%{m32}}" }, \
   {"arch_64", "%{" OPT_ARCH64 ":%{m64}}" }, \
   {"tune", "%{!mtune=*:-mtune=%(VALUE)}" }, \
@@ -166,6 +169,7 @@ along with GCC; see the file COPYING3.  If not see
 #define ASM_SPEC "\
 %(subtarget_asm_debugging_spec) \
 %{m32} %{m64} %{!m32:%{!m64: %(asm_abi_default_spec)}} \
+%{mrvc} \
 %{fPIC|fpic|fPIE|fpie:-fpic} \
 %{march=*} \
 %(subtarget_asm_spec)"
@@ -197,6 +201,8 @@ along with GCC; see the file COPYING3.  If not see
 #ifndef SUBTARGET_EXTRA_SPECS
 #define SUBTARGET_EXTRA_SPECS
 #endif
+
+#define TARGET_DEFAULT_CMODEL CM_MEDLOW
 
 /* By default, turn on GDB extensions.  */
 #define DEFAULT_GDB_EXTENSIONS 1
@@ -281,7 +287,7 @@ along with GCC; see the file COPYING3.  If not see
 #define PARM_BOUNDARY BITS_PER_WORD
 
 /* Allocation boundary (in *bits*) for the code of a function.  */
-#define FUNCTION_BOUNDARY 32
+#define FUNCTION_BOUNDARY (TARGET_RVC ? 16 : 32)
 
 /* There is no point aligning anything to a rounder boundary than this.  */
 #define BIGGEST_ALIGNMENT 128
@@ -543,6 +549,7 @@ enum reg_class
 {
   NO_REGS,			/* no registers in set */
   T_REGS,			/* registers used by indirect sibcalls */
+  JALR_REGS,			/* registers used by indirect calls */
   GR_REGS,			/* integer registers */
   FP_REGS,			/* floating point registers */
   FRAME_REGS,			/* $arg and $frame */
@@ -562,6 +569,7 @@ enum reg_class
 {									\
   "NO_REGS",								\
   "T_REGS",								\
+  "JALR_REGS",								\
   "GR_REGS",								\
   "FP_REGS",								\
   "FRAME_REGS",								\
@@ -582,7 +590,8 @@ enum reg_class
 #define REG_CLASS_CONTENTS									\
 {												\
   { 0x00000000, 0x00000000, 0x00000000 },	/* NO_REGS */		\
-  { 0xf00000e0, 0x00000000, 0x00000000 },	/* T_REGS */		\
+  { 0xf0000040, 0x00000000, 0x00000000 },	/* T_REGS */		\
+  { 0xffffff40, 0x00000000, 0x00000000 },	/* JALR_REGS */		\
   { 0xffffffff, 0x00000000, 0x00000000 },	/* GR_REGS */		\
   { 0x00000000, 0xffffffff, 0x00000000 },	/* FP_REGS */		\
   { 0x00000000, 0x00000000, 0x00000003 },	/* FRAME_REGS */	\
@@ -721,6 +730,10 @@ enum reg_class
 #define FP_ARG_FIRST (FP_REG_FIRST + 10)
 #define FP_ARG_LAST  (FP_ARG_FIRST + MAX_ARGS_IN_REGISTERS - 1)
 
+#define CALLEE_SAVED_REG_NUMBER(REGNO)			\
+  ((REGNO) >= 8 && (REGNO) <= 9 ? (REGNO) - 8 :		\
+   (REGNO) >= 18 && (REGNO) <= 27 ? (REGNO) - 16 : -1)
+
 #define LIBCALL_VALUE(MODE) \
   riscv_function_value (NULL_TREE, NULL_TREE, MODE)
 
@@ -837,6 +850,7 @@ typedef struct {
 
 #define JUMP_TABLES_IN_TEXT_SECTION 0
 #define CASE_VECTOR_MODE SImode
+#define CASE_VECTOR_PC_RELATIVE (riscv_cmodel != CM_MEDLOW)
 
 /* Define this as 1 if `char' should by default be signed; else as 0.  */
 #define DEFAULT_SIGNED_CHAR 0
@@ -1070,24 +1084,6 @@ while (0)
    ? RISCV_MAX_MOVE_BYTES_STRAIGHT / MOVE_MAX		\
    : RISCV_CALL_RATIO / 2)
 
-/* movmemsi is meant to generate code that is at least as good as
-   move_by_pieces.  However, movmemsi effectively uses a by-pieces
-   implementation both for moves smaller than a word and for word-aligned
-   moves of no more than RISCV_MAX_MOVE_BYTES_STRAIGHT bytes.  We should
-   allow the tree-level optimisers to do such moves by pieces, as it
-   often exposes other optimization opportunities.  We might as well
-   continue to use movmemsi at the rtl level though, as it produces
-   better code when scheduling is disabled (such as at -O).  */
-
-#define MOVE_BY_PIECES_P(SIZE, ALIGN)				\
-  (HAVE_movmemsi						\
-   ? (!currently_expanding_to_rtl				\
-      && ((ALIGN) < BITS_PER_WORD				\
-	  ? (SIZE) < UNITS_PER_WORD				\
-	  : (SIZE) <= RISCV_MAX_MOVE_BYTES_STRAIGHT))		\
-   : (move_by_pieces_ninsns (SIZE, ALIGN, MOVE_MAX_PIECES + 1)	\
-      < (unsigned int) MOVE_RATIO (false)))
-
 /* For CLEAR_RATIO, when optimizing for size, give a better estimate
    of the length of a memset call, but use the default otherwise.  */
 
@@ -1100,17 +1096,6 @@ while (0)
 
 #define SET_RATIO(speed) \
   ((speed) ? 15 : RISCV_CALL_RATIO - 2)
-
-/* STORE_BY_PIECES_P can be used when copying a constant string, but
-   in that case each word takes 3 insns (lui, ori, sw), or more in
-   64-bit mode, instead of 2 (lw, sw).  For now we always fail this
-   and let the move_by_pieces code copy the string from read-only
-   memory.  In the future, this could be tuned further for multi-issue
-   CPUs that can issue stores down one pipe and arithmetic instructions
-   down another; in that case, the lui/ori/sw combination would be a
-   win for long enough strings.  */
-
-#define STORE_BY_PIECES_P(SIZE, ALIGN) 0
 
 #ifndef HAVE_AS_TLS
 #define HAVE_AS_TLS 0

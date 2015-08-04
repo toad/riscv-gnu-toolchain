@@ -66,7 +66,6 @@ small:
   while (la < lend)
     BODY(la, lb, long);
 
-maybe_done:
   a = (char*)la;
   b = (const char*)lb;
   if (__builtin_expect(a < end, 0))

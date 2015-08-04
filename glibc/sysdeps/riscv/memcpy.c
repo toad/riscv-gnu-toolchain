@@ -110,7 +110,6 @@ small:
   }
 #endif
 
-maybe_done:
   a = (char*)la;
   b = (const char*)lb;
   if (__builtin_expect(a < end, 0))

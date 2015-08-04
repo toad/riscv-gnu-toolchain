@@ -30,7 +30,7 @@
 #include "elf/riscv.h"
 
 #include <stdint.h>
-#include <assert.h>
+#include <ctype.h>
 
 struct riscv_private_data
 {
@@ -63,9 +63,11 @@ parse_riscv_dis_option (const char *option)
       riscv_gpr_names = riscv_gpr_names_numeric;
       riscv_fpr_names = riscv_fpr_names_numeric;
     }
-
-  /* Invalid option.  */
-  fprintf (stderr, _("Unrecognized disassembler option: %s\n"), option);
+  else
+    {
+      /* Invalid option.  */
+      fprintf (stderr, _("Unrecognized disassembler option: %s\n"), option);
+    }
 }
 
 static void
@@ -117,9 +119,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
   struct riscv_private_data *pd = info->private_data;
   int rs1 = (l >> OP_SH_RS1) & OP_MASK_RS1;
   int rd = (l >> OP_SH_RD) & OP_MASK_RD;
+  fprintf_ftype print = info->fprintf_func;
 
   if (*d != '\0')
-    (*info->fprintf_func) (info->stream, "\t");
+    print (info->stream, "\t");
 
   for (; *d != '\0'; d++)
     {
@@ -212,6 +215,86 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
           }
           break;
 
+	case 'C': /* RVC */
+	  switch (*++d)
+	    {
+	    case 'd': /* RD x8-x15 */
+	      print (info->stream, "%s",
+		     riscv_gpr_names[((l >> OP_SH_CRDS) & OP_MASK_CRDS) + 8]);
+	      break;
+	    case 's': /* RS1 x8-x15 */
+	    case 'w': /* RS1 x8-x15 */
+	      print (info->stream, "%s",
+		     riscv_gpr_names[((l >> OP_SH_CRS1S) & OP_MASK_CRS1S) + 8]);
+	      break;
+	    case 't': /* RS2 x8-x15 */
+	    case 'x': /* RS2 x8-x15 */
+	      print (info->stream, "%s",
+		     riscv_gpr_names[((l >> OP_SH_CRS2S) & OP_MASK_CRS2S) + 8]);
+	      break;
+	    case 'U': /* RS1, constrained to equal RD */
+	    case 'D': /* RS1 or RD, nonzero */
+	      print (info->stream, "%s", riscv_gpr_names[rd]);
+	      break;
+	    case 'c': /* RS1, constrained to equal sp */
+	      print (info->stream, "%s", riscv_gpr_names[X_SP]);
+	      continue;
+	    case 'T': /* RS2, nonzero */
+	    case 'V': /* RS2 */
+	      print (info->stream, "%s",
+		     riscv_gpr_names[(l >> OP_SH_CRS2) & OP_MASK_CRS2]);
+	      continue;
+	    case 'i':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_SIMM3 (l));
+	      break;
+	    case 'j':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_IMM (l));
+	      break;
+	    case 'k':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_LW_IMM (l));
+	      break;
+	    case 'l':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_LD_IMM (l));
+	      break;
+	    case 'm':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_LWSP_IMM (l));
+	      break;
+	    case 'n':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_LDSP_IMM (l));
+	      break;
+	    case 'K':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_ADDI4SPN_IMM (l));
+	      break;
+	    case 'L':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_ADDI16SP_IMM (l));
+	      break;
+	    case 'M':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_SWSP_IMM (l));
+	      break;
+	    case 'N':
+	      print (info->stream, "%d", (int)EXTRACT_RVC_SDSP_IMM (l));
+	      break;
+	    case 'p':
+	      info->target = EXTRACT_RVC_B_IMM (l) + pc;
+	      (*info->print_address_func) (info->target, info);
+	      break;
+	    case 'a':
+	      info->target = EXTRACT_RVC_J_IMM (l) + pc;
+	      (*info->print_address_func) (info->target, info);
+	      break;
+	    case 'u':
+	      print (info->stream, "0x%x",
+		     (int)(EXTRACT_RVC_IMM (l) & (RISCV_BIGIMM_REACH-1)));
+	      break;
+	    case '>':
+	      print (info->stream, "0x%x", (int)EXTRACT_RVC_IMM (l) & 0x3f);
+	      break;
+	    case '<':
+	      print (info->stream, "0x%x", (int)EXTRACT_RVC_IMM (l) & 0x1f);
+	      break;
+	    }
+	  break;
+
 	case ',':
 	case '(':
 	case ')':
@@ -221,6 +304,9 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  break;
 
 	case '0':
+	  /* Only print constant 0 if it is the last argument */
+	  if (!d[1])
+	    print (info->stream, "0");
 	  break;
 
 	case 'b':
@@ -357,25 +443,20 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
 {
   const struct riscv_opcode *op;
   static bfd_boolean init = 0;
-  static const char *extension = NULL;
   static const struct riscv_opcode *riscv_hash[OP_MASK_OP + 1];
   struct riscv_private_data *pd;
   int insnlen;
 
+#define OP_HASH_IDX(i) ((i) & (riscv_insn_length (i) == 2 ? 0x3 : 0x7f))
+
   /* Build a hash table to shorten the search time.  */
   if (! init)
     {
-      unsigned int i;
-      unsigned int e_flags = elf_elfheader (info->section->owner)->e_flags;
-      extension = riscv_elf_flag_to_name(EF_GET_RISCV_EXT(e_flags));
-
-      for (i = 0; i <= OP_MASK_OP; i++)
-        for (op = riscv_opcodes; op < &riscv_opcodes[NUMOPCODES]; op++)
-          if (i == ((op->match >> OP_SH_OP) & OP_MASK_OP))
-            {
-              riscv_hash[i] = op;
-              break;
-            }
+      for (op = riscv_opcodes; op < &riscv_opcodes[NUMOPCODES]; op++)
+        {
+	  if (!riscv_hash[OP_HASH_IDX (op->match)])
+	    riscv_hash[OP_HASH_IDX (op->match)] = op;
+        }
 
       init = 1;
     }
@@ -384,7 +465,7 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
     {
       int i;
 
-      pd = info->private_data = calloc(1, sizeof (struct riscv_private_data));
+      pd = info->private_data = xcalloc (1, sizeof (struct riscv_private_data));
       pd->gp = -1;
       pd->print_addr = -1;
       for (i = 0; i < (int) ARRAY_SIZE(pd->hi_addr); i++)
@@ -409,14 +490,31 @@ riscv_disassemble_insn (bfd_vma memaddr, insn_t word, disassemble_info *info)
   info->target = 0;
   info->target2 = 0;
 
-  op = riscv_hash[(word >> OP_SH_OP) & OP_MASK_OP];
+  op = riscv_hash[OP_HASH_IDX (word)];
   if (op != NULL)
     {
+      const char *extension = NULL;
+      int xlen = 0;
+
+      /* The incoming section might not always be complete.  */
+      if (info->section != NULL)
+	{
+	  Elf_Internal_Ehdr *ehdr = elf_elfheader (info->section->owner);
+	  unsigned int e_flags = ehdr->e_flags;
+	  extension = riscv_elf_flag_to_name (EF_GET_RISCV_EXT (e_flags));
+
+	  xlen = 32;
+	  if (ehdr->e_ident[EI_CLASS] == ELFCLASS64)
+	    xlen = 64;
+	}
+
       for (; op < &riscv_opcodes[NUMOPCODES]; op++)
 	{
 	  if ((op->match_func) (op, word)
 	      && !(no_aliases && (op->pinfo & INSN_ALIAS))
-	      && !(op->subset[0] == 'X' && strcmp(op->subset, extension)))
+	      && !(op->subset[0] == 'X' && extension != NULL
+		   && strcmp (op->subset, extension))
+	      && !(isdigit(op->subset[0]) && atoi(op->subset) != xlen))
 	    {
 	      (*info->fprintf_func) (info->stream, "%s", op->name);
 	      print_insn_args (op->args, word, memaddr, info);
