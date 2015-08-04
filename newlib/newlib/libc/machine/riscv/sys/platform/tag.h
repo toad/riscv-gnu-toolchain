@@ -47,7 +47,7 @@
  * important for it to be inline. */
 
 #ifndef INLINE
-# if __GNUC__ && !__GNUC_STDC_INLINE__
+# if __GNUC__ && !defined(__GNUC_STDC_INLINE__)
 #  define INLINE extern inline __attribute__((always_inline))
 # elif __GNUC__
 #  define INLINE inline __attribute__((always_inline))
