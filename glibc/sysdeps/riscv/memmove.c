@@ -1,6 +1,6 @@
 /** Memmove for LowRISC (copy tags when all arguments are aligned) */
 
-#include "tag.h"
+#include "sys/platform/tag.h"
 
 /* Build the no-tag-copying version of memmove */
 
