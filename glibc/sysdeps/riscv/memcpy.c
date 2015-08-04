@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "sys/platform/tag.h"
 
+/* FIXME should be defined by gcc if applicable */
 #define TAGGED_MEMORY
 
 #ifdef TAGGED_MEMORY

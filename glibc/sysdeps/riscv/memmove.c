@@ -1,5 +1,12 @@
 /** Memmove for LowRISC (copy tags when all arguments are aligned) */
 
+/* FIXME should be defined by gcc if applicable */
+#define TAGGED_MEMORY
+
+#ifndef TAGGED_MEMORY
+#include "string/memmove.c"
+#else
+
 #include "sys/platform/tag.h"
 
 /* Build the no-tag-copying version of memmove */
@@ -104,3 +111,4 @@ void* memmove(void *dst, const void* src, size_t length) {
 }
 
 libc_hidden_builtin_def (memmove)
+#endif /* TAGGED_MEMORY */
