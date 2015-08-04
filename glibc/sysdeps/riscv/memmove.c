@@ -1,10 +1,25 @@
 /** Memmove for LowRISC (copy tags when all arguments are aligned) */
 
+#include "tag.h"
+
 /* Build the no-tag-copying version of memmove */
 
+#include <stddef.h>
+#include <string.h>
+
+void* __memmove_no_tags(void* dst, const void* src, size_t len);
+
+/* Persuade memmove.c not to redefine memmove etc */
 #define MEMMOVE __memmove_no_tags
+#define a1 dest
+#define a2 src
+#define a1const
+#define a2const const
+#define memmove
+
 #include "string/memmove.c"
-#include "tag.h"
+
+#undef memmove
 
 /* Nonzero if either X or Y is not aligned on a "long" boundary.  */
 #define UNALIGNED3(X, Y, Z) \
@@ -71,7 +86,7 @@ void* __memmove_with_tags(op_t* dest, op_t* src, size_t len) {
 
 /* Choose the right version at runtime */
 
-void* __memmove (void *dest, const void *src, size_t len) {
+void* memmove (void *dest, const void *src, size_t len) {
   if(UNALIGNED3(dest, src, len)) {
     return __memmove_no_tags(dest, src, len);
   } else {
@@ -80,6 +95,4 @@ void* __memmove (void *dest, const void *src, size_t len) {
   return dest;
 }
 
-weak_alias (__memmove, memmove)
 libc_hidden_builtin_def (memmove)
-
