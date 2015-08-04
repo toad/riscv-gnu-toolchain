@@ -69,7 +69,7 @@ INLINE void __riscv_store_tag(void *addr, unsigned char tag) {
   unsigned int t = tag;
   asm volatile ("stag %0, 0(%1)"
                 :
-                :"r"(tag), "r"(addr)
+                :"r"(t), "r"(addr)
                 );
 }
 
