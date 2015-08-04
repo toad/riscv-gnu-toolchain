@@ -55,7 +55,7 @@ static inline void wordcopy_bwd_tagged(op_t* dest, op_t* src, size_t len) {
 
 /* Tag-copying version of memmove */
 
-void* __riscv_memmove_with_tags(op_t* dest, op_t* src, size_t len) {
+void* __riscv_memmove_tagged_longs(op_t* dest, op_t* src, size_t len) {
   unsigned long int dstp = (long int) dest;
   unsigned long int srcp = (long int) src;
   /* This test makes the forward copying code be used whenever possible.
@@ -68,18 +68,25 @@ void* __riscv_memmove_with_tags(op_t* dest, op_t* src, size_t len) {
       /* Will include tags */
       dest = memcpy (dest, src, len);
 #else
-      /* Copy whole pages from SRCP to DSTP by virtual address
-         manipulation, as much as possible.  */
-
-      PAGE_COPY_FWD_MAYBE (dstp, srcp, len, len);
+# if PAGE_COPY_THRESHOLD > 0
+      // REDFLAG Untested, only used on Mach
+      size_t lenBytes = len * sizeof(op_t);
+      if(lenBytes > PAGE_COPY_THRESHOLD) {
+        /* Copy whole pages from SRCP to DSTP by virtual address
+           manipulation, as much as possible.  */
+        PAGE_COPY_FWD_MAYBE (dstp, srcp, lenBytes, lenBytes);
+        // Update len
+        len = lenBytes / sizeof(op_t);
+      }
+# endif
 
       /* Copy words. We know it is fully aligned so there won't be any
        * bytes left over. */
-      wordcopy_fwd_tagged(dest, src, len / OPSIZ);
+      wordcopy_fwd_tagged(dest, src, len);
 #endif /* MEMCPY_OK_FOR_FWD_MEMMOVE */
     } else {
       /* Copy words backwards. Fully aligned so no bytes left over. */
-      wordcopy_bwd_tagged(dest, src, len / OPSIZ);
+      wordcopy_bwd_tagged(dest, src, len);
     }
     return dest;
 }
@@ -90,7 +97,7 @@ void* memmove(void *dst, const void* src, size_t length) {
   if(UNALIGNED3(dst, src, length))
     return __riscv_memmove_no_tags(dst, src, length);
   else
-    return __riscv_memmove_with_tags((op_t*)dst, (op_t*)src, length);
+    return __riscv_memmove_tagged_longs((op_t*)dst, (op_t*)src, length / sizeof(op_t));
   return dst;
 }
 
