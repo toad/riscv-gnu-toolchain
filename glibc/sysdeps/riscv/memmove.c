@@ -33,84 +33,95 @@ void* __riscv_memmove_no_tags(void* dst, const void* src, size_t len);
   (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
   ((long)Z & (sizeof (long) - 1)))
 
-#define store_tag __riscv_store_tag
-#define load_tag __riscv_load_tag
+/* All arguments must be long-aligned, and the length is in long's. */
+unsigned long* __riscv_memmove_tagged_longs(unsigned long *dst, 
+  const unsigned long* src, size_t length) {
 
-/* Copy forwards. len in words */
-static inline void wordcopy_fwd_tagged(op_t* dest, const op_t* src, size_t len) {
-  /* FIXME consider unrolling, see string/wordcopy.c.
-   * However, the compiler really ought to be able to do that nowadays! */
-  for(;len;dest++,src++,len--) {
-    op_t a = *src;
-    char tag = load_tag(src);
-    *dest = a;
-    store_tag(dest, tag);
-  }
-}
+#define TAG_COPY_BACKWARD(d, s, length) do { \
+  d += length; \
+  s += length; \
+  s--; d--; \
+  for(;length--;s--,d--) { \
+    unsigned long l = *s; \
+    char tag = __riscv_load_tag(s); \
+    *d = l; \
+    __riscv_store_tag(d, tag); \
+  } \
+} while(0);
 
-/* Copy backwards. len in words */
-static inline void wordcopy_bwd_tagged(op_t* dest, const op_t* src, size_t len) {
-  /* FIXME consider unrolling, see string/wordcopy.c.
-   * However, the compiler really ought to be able to do that nowadays! */
-  dest += (len-1);
-  src += (len-1);
-  for(;len;dest--,src--,len--) {
-    op_t a = *src;
-    char tag = load_tag(src);
-    *dest = a;
-    store_tag(dest, tag);
-  }
-}
+#define TAG_COPY_FORWARD(d, s, length) do { \
+  for(;length--;s++,d++) { \
+    unsigned long l = *s; \
+    char tag = __riscv_load_tag(s); \
+    *d = l; \
+    __riscv_store_tag(d, tag); \
+  } \
+} while(0)
 
-/* Tag-copying version of memmove */
+  unsigned long * const ret = dst;
 
-op_t* __riscv_memmove_tagged_longs(op_t* dest, const op_t* src, size_t len) {
-  op_t* ret = dest;
-  unsigned long int dstp = (long int) dest;
-  unsigned long int srcp = (long int) src;
-  /* This test makes the forward copying code be used whenever possible.
-     Reduces the working set.  */
-  if (dstp - srcp >= len*sizeof(op_t))       /* *Unsigned* compare!  */
+#if defined(PREFER_SIZE_OVER_SPEED) || defined(__OPTIMIZE_SIZE__)
+
+  if (src < dst && dst < src + length)
     {
-      /* Copy from the beginning to the end.  */
-
-#if MEMCPY_OK_FOR_FWD_MEMMOVE
-      /* Will include tags */
-      dest = memcpy (dest, src, len);
-#else
-# if PAGE_COPY_THRESHOLD > 0
-      // REDFLAG Untested, only used on Mach
-      size_t lenBytes = len * sizeof(op_t);
-      if(lenBytes > PAGE_COPY_THRESHOLD) {
-        /* Copy whole pages from SRCP to DSTP by virtual address
-           manipulation, as much as possible.  */
-        PAGE_COPY_FWD_MAYBE (dstp, srcp, lenBytes, lenBytes);
-        // Update len
-        len = lenBytes / sizeof(op_t);
-        dest = (op_t*) dstp;
-        src = (op_t*) srcp;
-      }
-# endif
-
-      /* Copy words. We know it is fully aligned so there won't be any
-       * bytes left over. */
-      wordcopy_fwd_tagged(dest, src, len);
-#endif /* MEMCPY_OK_FOR_FWD_MEMMOVE */
-    } else {
-      /* Copy words backwards. Fully aligned so no bytes left over. */
-      wordcopy_bwd_tagged(dest, src, len);
+      TAG_COPY_BACKWARD(dst, src, length);
+      return ret;
     }
-    return ret;
-}
+  else
+    {
+      TAG_COPY_FORWARD(dst, src, length);
+      return ret;
+    }
+#else
+  if (src < dst && dst < src + length)
+    {
+      TAG_COPY_BACKWARD(dst, src, length);
+      return dst;
+    }
+  else
+    {
+      /* Use optimizing algorithm for a non-destructive copy to closely 
+         match memcpy. */
 
-/* Choose the right version at runtime */
+      /* Copy 4X long words at a time if possible.  */
+      while (length >= 4)
+        {
+#define COPY(aligned_dst, aligned_src) do { \
+  unsigned long val = *aligned_src; \
+  char tag = __riscv_load_tag(aligned_src); \
+  *aligned_dst = val; \
+  __riscv_store_tag(aligned_dst, tag); \
+  aligned_dst++; \
+  aligned_src++; \
+} while(0);
+
+          COPY(dst, src);
+          COPY(dst, src);
+          COPY(dst, src);
+          COPY(dst, src);
+          length -= 4;
+        }
+
+      /* Copy one long word at a time if possible.  */
+      while (length >= 1)
+        {
+          COPY(dst, src)
+          length--;
+        }
+    }
+
+  return ret;
+#endif /* not PREFER_SIZE_OVER_SPEED */
+}
 
 void* memmove(void *dst, const void* src, size_t length) {
   if(UNALIGNED3(dst, src, length))
     return __riscv_memmove_no_tags(dst, src, length);
   else
-    return __riscv_memmove_tagged_longs((op_t*)dst, (op_t*)src, length / sizeof(op_t));
+    return __riscv_memmove_tagged_longs((unsigned long*)dst, 
+      (const unsigned long*)src, length/sizeof(unsigned long));
 }
 
 libc_hidden_builtin_def (memmove)
+
 #endif /* TAGGED_MEMORY */
