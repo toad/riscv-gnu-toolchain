@@ -76,7 +76,7 @@ unsigned long* __riscv_memmove_tagged_longs(unsigned long *dst,
   if (src < dst && dst < src + length)
     {
       TAG_COPY_BACKWARD(dst, src, length);
-      return dst;
+      return ret;
     }
   else
     {
