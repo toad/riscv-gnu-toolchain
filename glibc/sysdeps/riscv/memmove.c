@@ -107,7 +107,6 @@ void* memmove(void *dst, const void* src, size_t length) {
     return __riscv_memmove_no_tags(dst, src, length);
   else
     return __riscv_memmove_tagged_longs((op_t*)dst, (op_t*)src, length / sizeof(op_t));
-  return dst;
 }
 
 libc_hidden_builtin_def (memmove)
