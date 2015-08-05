@@ -65,6 +65,7 @@ static inline void wordcopy_bwd_tagged(op_t* dest, const op_t* src, size_t len) 
 /* Tag-copying version of memmove */
 
 op_t* __riscv_memmove_tagged_longs(op_t* dest, const op_t* src, size_t len) {
+  op_t* ret = dest;
   unsigned long int dstp = (long int) dest;
   unsigned long int srcp = (long int) src;
   /* This test makes the forward copying code be used whenever possible.
@@ -86,6 +87,8 @@ op_t* __riscv_memmove_tagged_longs(op_t* dest, const op_t* src, size_t len) {
         PAGE_COPY_FWD_MAYBE (dstp, srcp, lenBytes, lenBytes);
         // Update len
         len = lenBytes / sizeof(op_t);
+        dest = (op_t*) dstp;
+        src = (op_t*) srcp;
       }
 # endif
 
@@ -97,7 +100,7 @@ op_t* __riscv_memmove_tagged_longs(op_t* dest, const op_t* src, size_t len) {
       /* Copy words backwards. Fully aligned so no bytes left over. */
       wordcopy_bwd_tagged(dest, src, len);
     }
-    return dest;
+    return ret;
 }
 
 /* Choose the right version at runtime */
