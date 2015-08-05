@@ -70,7 +70,7 @@ op_t* __riscv_memmove_tagged_longs(op_t* dest, const op_t* src, size_t len) {
   unsigned long int srcp = (long int) src;
   /* This test makes the forward copying code be used whenever possible.
      Reduces the working set.  */
-  if (dstp - srcp >= len)       /* *Unsigned* compare!  */
+  if (dstp - srcp >= len*sizeof(op_t))       /* *Unsigned* compare!  */
     {
       /* Copy from the beginning to the end.  */
 
