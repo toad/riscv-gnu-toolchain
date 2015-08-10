@@ -22,26 +22,22 @@
 #define __RISCV_TAG_NONE 0
 /* Fault on write. */
 #define __RISCV_TAG_READ_ONLY 1
-/* Fault on read. */
+/* Fault on read. Cleared on "normal" write, so "write then read". */
 #define __RISCV_TAG_WRITE_ONLY 2
 /* Fault on read or write. */
 #define __RISCV_TAG_INVALID 3
-/* No effect, but cleared on write */
-#define __RISCV_TAG_LAZY 4
-/* Not readable until written (then 0) */
-#define __RISCV_TAG_WRITE_THEN_READ 6
 /* Function pointer */
-#define __RISCV_TAG_CLEAN_FPTR 12
+#define __RISCV_TAG_CLEAN_FPTR 4
 /* Pointer to function pointer (e.g. vtable) */
-#define __RISCV_TAG_CLEAN_PFPTR 20
+#define __RISCV_TAG_CLEAN_PFPTR 5
 /* Pointer to structure including function pointer etc */
-#define __RISCV_TAG_CLEAN_SENSITIVE 28
+#define __RISCV_TAG_CLEAN_SENSITIVE 6
 /* Pointer to structure including void* */
-#define __RISCV_TAG_CLEAN_SENSITIVE_VOID 36
+#define __RISCV_TAG_CLEAN_SENSITIVE_VOID 7
 /* void* (or char*) */
-#define __RISCV_TAG_CLEAN_VOIDPTR 44
+#define __RISCV_TAG_CLEAN_VOIDPTR 8
 /* Any pointer */
-#define __RISCV_TAG_CLEAN_POINTER 52
+#define __RISCV_TAG_CLEAN_POINTER 9
 
 /* Load tag, store tag. May be used in very low level code e.g. memcpy, so 
  * important for it to be inline. */
