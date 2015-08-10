@@ -49,7 +49,7 @@
 #ifndef INLINE
 # if __GNUC__ && !defined(__GNUC_STDC_INLINE__)
 #  define INLINE extern inline __attribute__((always_inline))
-# elif __GNUC__
+# elif __GNUC__ || defined(__clang__)
 #  define INLINE inline __attribute__((always_inline))
 # else
 #  define INLINE inline
