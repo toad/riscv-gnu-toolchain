@@ -40,6 +40,7 @@ CFLAGS-cxa_atexit.c += -mno-plt
 
 ifeq ($(subdir),misc)
 sysdep_headers += sys/asm.h
+sysdep_headers += sys/platform/tag.h
 endif
 
 ASFLAGS-.os += $(pic-ccflag)

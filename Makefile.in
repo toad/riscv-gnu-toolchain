@@ -18,6 +18,10 @@ newlib_url := ftp://sourceware.org/pub/newlib/newlib-$(newlib_version).tar.gz
 XLEN ?= @XLEN@
 WITH_ARCH ?= @WITH_ARCH@
 SYSROOT := $(INSTALL_DIR)/sysroot
+gcc_sha256=87f3f1b3deebee26b6b71068c37201541586647c1ee64a505b06fc4129d6376a
+binutils_sha256=cccf377168b41a52a76f46df18feb8f7285654b3c1bd69fc8265cb0fc6902f2d
+glibc_sha256=8d8f78058f2e9c7237700f76fe4e0ae500db31470290cd0b8a9739c0c8ce9738
+newlib_sha256=d608f22b0b2e7725d2fca13cac19f34bc652d9773acadae778db9881746cb071
 
 SHELL := /bin/sh
 AWK := @GAWK@
@@ -66,7 +70,10 @@ endif
 $(addprefix src/original-,$(PACKAGES)):
 	mkdir -p src
 	rm -rf $@ $(subst original-,,$@)-*
-	cd src && (cat $(DISTDIR)/$(subst src/original-,,$@)-$($(subst src/original-,,$@)_version).tar.gz || @FETCHER@ $($(subst src/original-,,$@)_url)) | tar zxf -
+	curl $($(subst src/original-,,$@)_url) -o $@.tar.gz
+	hash=$$(sha256sum $@.tar.gz | cut -d " " -f 1) && test "$$hash" = "$($(subst src/original-,,$@)_sha256)"
+	cd src && tar zxf ../$@.tar.gz
+	rm $@.tar.gz
 	mv $(subst original-,,$@)-$($(subst src/original-,,$@)_version) $@
 
 $(addprefix src/,$(PACKAGES)): src/%: src/original-%
@@ -74,7 +81,7 @@ $(addprefix src/,$(PACKAGES)): src/%: src/original-%
 	cp -R $< $@.tmp
 	$(srcdir)/scripts/cp_s $(srcdir)/$(notdir $@) $@.tmp
 	cd $@.tmp && patch -p1 < $(srcdir)/patches/$(notdir $@)
-	if test -f $@.tmp/contrib/download_prerequisites && test "@NEED_GCC_EXTERNAL_LIBRARIES@" == "true"; then cd $@.tmp && ./contrib/download_prerequisites; fi
+	if test -f $@.tmp/contrib/download_prerequisites && test "@NEED_GCC_EXTERNAL_LIBRARIES@" = "true"; then cd $@.tmp && ./contrib/download_prerequisites; fi
 	mv $@.tmp $@
 
 .PHONY: patches $(addprefix $(srcdir)/patches/,$(PACKAGES))

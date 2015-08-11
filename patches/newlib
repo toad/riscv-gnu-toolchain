@@ -215,3 +215,75 @@
  @end tex
  
  @contents
+--- original-newlib/newlib/Makefile.in	2009-10-20 23:43:45.000000000 +0100
++++ newlib/newlib/Makefile.in	2015-07-29 09:51:34.870467365 +0100
+@@ -907,7 +907,7 @@
+ # used while building.
+ stmp-targ-include: config.status
+ 	-rm -rf targ-include stmp-targ-include
+-	mkdir targ-include targ-include/sys targ-include/machine targ-include/bits
++	mkdir targ-include targ-include/sys targ-include/sys/platform targ-include/machine targ-include/bits
+ 	cp newlib.h targ-include/newlib.h
+ 	-for i in $(srcdir)/libc/machine/$(machine_dir)/machine/*.h; do \
+ 	    if [ -f $$i ]; then \
+@@ -919,6 +919,11 @@
+ 	      cp $$i targ-include/sys/`basename $$i`; \
+ 	    else true; fi ; \
+ 	  done
++	-for i in $(srcdir)/libc/machine/$(machine_dir)/sys/platform/*.h; do \
++	    if [ -f $$i ]; then \
++	      cp $$i targ-include/sys/platform/`basename $$i`; \
++	    else true; fi ; \
++	  done
+ 	-for i in $(srcdir)/libc/machine/$(machine_dir)/include/*.h; do \
+ 	    if [ -f $$i ]; then \
+ 	      cp $$i targ-include/`basename $$i`; \
+@@ -984,6 +989,12 @@
+ 	     $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/sys/`basename $$i`; \
+ 	    else true; fi ; \
+ 	  done ; \
++	  $(mkinstalldirs) $(DESTDIR)$(tooldir)/include/sys/platform; \
++	  for i in $(srcdir)/libc/machine/$(machine_dir)/sys/platform/*.h; do \
++	    if [ -f $$i ]; then \
++	     $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/sys/platform/`basename $$i`; \
++	    else true; fi ; \
++	  done ; \
+ 	  for i in $(srcdir)/libc/machine/$(machine_dir)/include/*.h; do \
+ 	    if [ -f $$i ]; then \
+ 	     $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/`basename $$i`; \
+--- original-newlib/newlib/Makefile.am	2009-08-18 22:48:05.000000000 +0100
++++ newlib/newlib/Makefile.am	2015-07-29 09:50:33.210174946 +0100
+@@ -196,7 +196,7 @@
+ # used while building.
+ stmp-targ-include: config.status
+ 	-rm -rf targ-include stmp-targ-include
+-	mkdir targ-include targ-include/sys targ-include/machine targ-include/bits
++	mkdir targ-include targ-include/sys targ-include/sys/platform targ-include/machine targ-include/bits
+ 	cp newlib.h targ-include/newlib.h
+ 	-for i in $(srcdir)/libc/machine/$(machine_dir)/machine/*.h; do \
+ 	    if [ -f $$i ]; then \
+@@ -208,6 +208,11 @@
+ 	      cp $$i targ-include/sys/`basename $$i`; \
+ 	    else true; fi ; \
+ 	  done
++	-for i in $(srcdir)/libc/machine/$(machine_dir)/sys/platform/*.h; do \
++	    if [ -f $$i ]; then \
++	      cp $$i targ-include/sys/platform/`basename $$i`; \
++	    else true; fi ; \
++	  done
+ 	-for i in $(srcdir)/libc/machine/$(machine_dir)/include/*.h; do \
+ 	    if [ -f $$i ]; then \
+ 	      cp $$i targ-include/`basename $$i`; \
+@@ -278,6 +283,12 @@
+ 	     $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/sys/`basename $$i`; \
+ 	    else true; fi ; \
+ 	  done ; \
++	  $(mkinstalldirs) $(DESTDIR)$(tooldir)/include/sys/platform; \
++	  for i in $(srcdir)/libc/machine/$(machine_dir)/sys/platform/*.h; do \
++	    if [ -f $$i ]; then \
++	     $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/sys/platform/`basename $$i`; \
++	    else true; fi ; \
++	  done ; \
+ 	  for i in $(srcdir)/libc/machine/$(machine_dir)/include/*.h; do \
+ 	    if [ -f $$i ]; then \
+ 	     $(INSTALL_DATA) $$i $(DESTDIR)$(tooldir)/include/`basename $$i`; \

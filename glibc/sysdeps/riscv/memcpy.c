@@ -1,7 +1,17 @@
 #include <string.h>
 #include <stdint.h>
+#include "sys/platform/tag.h"
 
-void* __memcpy(void* aa, const void* bb, size_t n)
+/* FIXME should be defined by gcc if applicable */
+#define TAGGED_MEMORY
+
+#ifdef TAGGED_MEMORY
+#define MEMCPY_NAME __riscv_memcpy_no_tags
+#else
+#define MEMCPY_NAME memcpy
+#endif
+
+void* MEMCPY_NAME(void* aa, const void* bb, size_t n)
 {
   #define BODY(a, b, t) { \
     t tt = *b; \
@@ -30,8 +40,7 @@ small:
   const long* lb = (const long*)b;
   long* lend = (long*)((uintptr_t)end & ~msk);
 
-  if (__builtin_expect(la < lend-8, 0))
-  {
+  if(__builtin_expect(la < lend-8, 0)) {
     while (la < lend-8)
     {
       long b0 = *lb++;
@@ -64,5 +73,66 @@ small:
     goto small;
   return aa;
 }
-weak_alias (__memcpy, memcpy)
+
+#ifdef TAGGED_MEMORY
+
+/* All arguments must be long-aligned, and the length is in long's. */
+unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la, 
+  const unsigned long* lb, size_t length) {
+
+  #define BODY_TAGGED(a, b) { \
+    long tt = *b; \
+    char tag = __riscv_load_tag(b); \
+    a++, b++; \
+    *(a-1) = tt; \
+    __riscv_store_tag(a-1, tag); \
+  }
+
+  unsigned long *ret = la;
+  unsigned long *lend = la + length;
+
+  if(__builtin_expect(la < lend-4, 0)) {
+    /* Only copy four at a time because will need regs for tags too.
+     * Compiler will use a whole reg for a char, right? */
+    while (la < lend-4)
+    {
+      long b0 = *lb++;
+      char t0 = __riscv_load_tag(lb-1);
+      long b1 = *lb++;
+      char t1 = __riscv_load_tag(lb-1);
+      long b2 = *lb++;
+      char t2 = __riscv_load_tag(lb-1);
+      long b3 = *lb++;
+      char t3 = __riscv_load_tag(lb-1);
+      *la++ = b0;
+      __riscv_store_tag(la-1, t0);
+      *la++ = b1;
+      __riscv_store_tag(la-1, t1);
+      *la++ = b2;
+      __riscv_store_tag(la-1, t2);
+      *la++ = b3;
+      __riscv_store_tag(la-1, t3);
+    }
+  }
+  while (la < lend)
+    BODY_TAGGED(la, lb);
+
+  return ret;
+}
+
+/* Nonzero if either X, Y or Z is not aligned on a "long" boundary.  */
+#define UNALIGNED3(X, Y, Z) \
+  (((long)X & (sizeof (long) - 1)) | ((long)Y & (sizeof (long) - 1)) | \
+  ((long)Z & (sizeof (long) - 1)))
+
+void* memcpy(void *dst, const void* src, size_t length) {
+  if(UNALIGNED3(dst, src, length))
+    return __riscv_memcpy_no_tags(dst, src, length);
+  else
+    return __riscv_memcpy_tagged_longs((unsigned long*)dst, 
+      (const unsigned long*)src, length/sizeof(unsigned long));
+}
+
 libc_hidden_builtin_def (memcpy)
+
+#endif /* TAGGED_MEMORY */
