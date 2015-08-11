@@ -855,6 +855,16 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"venqimm1",     "Xhwacha", "s,t", MATCH_VENQIMM1, MASK_VENQIMM1, match_opcode, 0},
 {"venqimm2",     "Xhwacha", "s,t", MATCH_VENQIMM2, MASK_VENQIMM2, match_opcode, 0},
 {"venqcnt",      "Xhwacha", "s,t", MATCH_VENQCNT, MASK_VENQCNT, match_opcode, 0},
+
+/* tagged memory: load/store and check tag*/
+{"ldct",      "64I", "d,o(s)", MATCH_LDCT, MASK_LDCT, match_opcode, WR_xd|RD_xs1 },
+{"sdct",      "64I", "t,q(s)", MATCH_SDCT, MASK_SDCT, match_opcode, RD_xs1|RD_xs2},
+{"wrt",         "I", "d,s,t", MATCH_WRT, MASK_WRT, match_opcode, WR_xd|RD_xs1|RD_xs2},
+{"rdt",         "I", "d,s", MATCH_RDT, MASK_RDT, match_opcode, WR_xd|RD_xs1},
+
+{"ltag",        "I", "d,o(s)", MATCH_LTAG, MASK_LTAG, match_opcode, WR_xd|RD_xs1 },
+{"stag",        "I", "t,q(s)",  MATCH_STAG, MASK_STAG, match_opcode,   RD_xs1|RD_xs2 },
+{"stal",        "I", "t,q(s)", MATCH_STAL, MASK_STAL, match_opcode, RD_xs1|RD_xs2},
 };
 
 #define RISCV_NUM_OPCODES \
