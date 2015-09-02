@@ -76,9 +76,9 @@ typedef struct {
   char tag;
 } __riscv_tagged_data_t;
 
-INLINE void __riscv_tag_and_store(void *addr, __riscv_tagged_data_t tdata) {
+INLINE void __riscv_store_tagged_data(void *addr, __riscv_tagged_data_t tdata) {
 	asm volatile (	"wrt %0, %1, %2\n"
-			"sd %0, 0(%3)\n"
+			"sdct %0, 0(%3)\n"
 			"wrt %0, %1, zero\n"
 			: "+r"(tdata.data)
 			: "r" (tdata.data), "r"(tdata.tag), "r"(addr) );
@@ -87,11 +87,12 @@ INLINE void __riscv_tag_and_store(void *addr, __riscv_tagged_data_t tdata) {
 }
 
 INLINE __riscv_tagged_data_t __riscv_load_tagged_data(const void *addr) {
-	long rv = 32;
-	char tag = 32;
-	asm volatile ("ld %0, 0(%1)" : "=r"(rv) : "r"(addr) );
-	asm volatile ("rdt %0, %1" : "=r"(tag) : "r"(rv) );
-	return {.data = rv, .tag = tag};
+	__riscv_tagged_data_t tdata;
+	tdata.data = 32;
+	tdata.tag = 32;
+	asm volatile ("ldct %0, 0(%1)" : "=r"(tdata.data) : "r"(addr) );
+	asm volatile ("rdt %0, %1" : "=r"(tdata.tag) : "r"(tdata.data) );
+	return tdata;
 }
 
 /* Variants of memcpy and memmove with and without copying tags.
