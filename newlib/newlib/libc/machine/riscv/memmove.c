@@ -128,19 +128,15 @@ unsigned long* __riscv_memmove_tagged_longs(unsigned long *dst,
   s += length; \
   s--; d--; \
   for(;length--;s--,d--) { \
-    unsigned long l = *s; \
-    char tag = __riscv_load_tag(s); \
-    *d = l; \
-    __riscv_store_tag(d, tag); \
+    __riscv_tagged_data_t v = __riscv_load_tagged_data(s); \
+    __riscv_store_tagged_data(d, v); \
   } \
 } while(0);
 
 #define TAG_COPY_FORWARD(d, s, length) do { \
   for(;length--;s++,d++) { \
-    unsigned long l = *s; \
-    char tag = __riscv_load_tag(s); \
-    *d = l; \
-    __riscv_store_tag(d, tag); \
+    __riscv_tagged_data_t v = __riscv_load_tagged_data(s); \
+    __riscv_store_tagged_data(d, v); \
   } \
 } while(0)
 
@@ -173,12 +169,8 @@ unsigned long* __riscv_memmove_tagged_longs(unsigned long *dst,
       while (length >= 4)
         {
 #define COPY(aligned_dst, aligned_src) do { \
-  unsigned long val = *aligned_src; \
-  char tag = __riscv_load_tag(aligned_src); \
-  *aligned_dst = val; \
-  __riscv_store_tag(aligned_dst, tag); \
-  aligned_dst++; \
-  aligned_src++; \
+  __riscv_tagged_data_t v = __riscv_load_tagged_data(aligned_src++); \
+  __riscv_store_tagged_data(aligned_dst++, v); \
 } while(0);
 
           COPY(dst, src);

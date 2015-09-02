@@ -80,11 +80,8 @@ unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la,
   const unsigned long* lb, size_t length) {
 
   #define BODY_TAGGED(a, b) { \
-    long tt = *b; \
-    char tag = __riscv_load_tag(b); \
-    a++, b++; \
-    *(a-1) = tt; \
-    __riscv_store_tag(a-1, tag); \
+    __riscv_tagged_data_t v = __riscv_load_tagged_data(b++); \
+    __riscv_store_tagged_data(a++, v); \
   }
 
   unsigned long *ret = la;
@@ -95,22 +92,20 @@ unsigned long* __riscv_memcpy_tagged_longs(unsigned long *la,
      * Compiler will use a whole reg for a char, right? */
     while (la < lend-4)
     {
-      long b0 = *lb++;
-      char t0 = __riscv_load_tag(lb-1);
-      long b1 = *lb++;
-      char t1 = __riscv_load_tag(lb-1);
-      long b2 = *lb++;
-      char t2 = __riscv_load_tag(lb-1);
-      long b3 = *lb++;
-      char t3 = __riscv_load_tag(lb-1);
-      *la++ = b0;
-      __riscv_store_tag(la-1, t0);
-      *la++ = b1;
-      __riscv_store_tag(la-1, t1);
-      *la++ = b2;
-      __riscv_store_tag(la-1, t2);
-      *la++ = b3;
-      __riscv_store_tag(la-1, t3);
+      /* Don't try to keep them in tagged registers because they might get spilled.
+       * At least this is correct and race-free. 
+       * FIXME optimise using tagged registers. 
+       * Probably requires writing the whole pass in inline assembler, and 
+       * fragile with spilling/ABI changes! */
+      __riscv_tagged_data_t v0, v1, v2, v3;
+      v0 = __riscv_load_tagged_data(lb++);
+      v1 = __riscv_load_tagged_data(lb++);
+      v2 = __riscv_load_tagged_data(lb++);
+      v3 = __riscv_load_tagged_data(lb++);
+      __riscv_store_tagged_data(la++, v0);
+      __riscv_store_tagged_data(la++, v1);
+      __riscv_store_tagged_data(la++, v2);
+      __riscv_store_tagged_data(la++, v3);
     }
   }
   while (la < lend)
