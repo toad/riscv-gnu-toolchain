@@ -2,7 +2,10 @@
 #include <stdint.h>
 #include "sys/platform/tag.h"
 
-#define TAGGED_MEMORY
+/* FIXME should be defined by gcc if applicable */
+#ifdef __riscv64
+# define TAGGED_MEMORY
+#endif
 
 #ifdef TAGGED_MEMORY
 #define MEMCPY_NAME __riscv_memcpy_no_tags

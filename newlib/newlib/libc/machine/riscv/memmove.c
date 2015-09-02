@@ -3,7 +3,10 @@
 #include <stddef.h>
 #include <limits.h>
 
-#define TAGGED_MEMORY
+/* FIXME should be defined by gcc if applicable */
+#ifdef __riscv64
+# define TAGGED_MEMORY
+#endif
 
 #ifdef TAGGED_MEMORY
 #include "sys/platform/tag.h"

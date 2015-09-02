@@ -8,6 +8,8 @@
  * in many cases, and the default behaviour should generally be compatible with 
  * existing code while not providing the maximum possible protection. */
 
+#if defined(__riscv64) || defined(TAGGED_MEMORY)
+
 #ifndef LOWRISC_TAG_H
 #define LOWRISC_TAG_H
 
@@ -154,3 +156,4 @@ INLINE void *__riscv_memmove_tagged(void *dst, const void *src, size_t length) {
 }
 
 #endif /* !LOWRISC_TAG_H */
+#endif

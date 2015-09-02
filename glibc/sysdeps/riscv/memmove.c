@@ -1,7 +1,10 @@
 /** Memmove for LowRISC (copy tags when all arguments are aligned) */
 
 /* FIXME should be defined by gcc if applicable */
-#define TAGGED_MEMORY
+/* FIXME should be defined by gcc if applicable */
+#ifdef __riscv64
+# define TAGGED_MEMORY
+#endif
 
 #ifndef TAGGED_MEMORY
 #include "string/memmove.c"
