@@ -86,7 +86,7 @@ INLINE void tag_and_store(void *addr, tagged_data_t tdata) {
 	// stale tag messing with your stuff!
 }
 
-INLINE tagged_data_t load_tagged_data(void *addr) {
+INLINE tagged_data_t load_tagged_data(const void *addr) {
 	long rv = 32;
 	char tag = 32;
 	asm volatile ("ld %0, 0(%1)" : "=r"(rv) : "r"(addr) );

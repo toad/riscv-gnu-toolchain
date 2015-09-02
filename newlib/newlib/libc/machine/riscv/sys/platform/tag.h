@@ -74,9 +74,9 @@ INLINE void __riscv_store_tag(void *addr, unsigned char tag) {
 typedef struct {
   unsigned long data;
   char tag;
-} tagged_data_t;
+} __riscv_tagged_data_t;
 
-INLINE void tag_and_store(void *addr, tagged_data_t tdata) {
+INLINE void __riscv_tag_and_store(void *addr, __riscv_tagged_data_t tdata) {
 	asm volatile (	"wrt %0, %1, %2\n"
 			"sd %0, 0(%3)\n"
 			"wrt %0, %1, zero\n"
@@ -86,7 +86,7 @@ INLINE void tag_and_store(void *addr, tagged_data_t tdata) {
 	// stale tag messing with your stuff!
 }
 
-INLINE tagged_data_t load_tagged_data(void *addr) {
+INLINE __riscv_tagged_data_t __riscv_load_tagged_data(const void *addr) {
 	long rv = 32;
 	char tag = 32;
 	asm volatile ("ld %0, 0(%1)" : "=r"(rv) : "r"(addr) );
