@@ -69,6 +69,31 @@ INLINE void __riscv_store_tag(void *addr, unsigned char tag) {
                 );
 }
 
+/* Atomic access to tagged values. Thanks Lucas. */
+
+typedef struct {
+  unsigned long data;
+  char tag;
+} tagged_data_t;
+
+INLINE void tag_and_store(void *addr, tagged_data_t tdata) {
+	asm volatile (	"wrt %0, %1, %2\n"
+			"sd %0, 0(%3)\n"
+			"wrt %0, %1, zero\n"
+			: "+r"(tdata.data)
+			: "r" (tdata.data), "r"(tdata.tag), "r"(addr) );
+	// also zero out the tag after you wrote it to prevent a
+	// stale tag messing with your stuff!
+}
+
+INLINE tagged_data_t load_tagged_data(void *addr) {
+	long rv = 32;
+	char tag = 32;
+	asm volatile ("ld %0, 0(%1)" : "=r"(rv) : "r"(addr) );
+	asm volatile ("rdt %0, %1" : "=r"(tag) : "r"(rv) );
+	return {.data = rv, .tag = tag};
+}
+
 /* Variants of memcpy and memmove with and without copying tags.
  *
  * SECURITY: You should only copy tags when there is a good reason to do so, as
